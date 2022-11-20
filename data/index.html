@@ -175,34 +175,34 @@
 		let calHtm = ``, shDatHtm = `<option value="all"> All Data </option>`, dat;
 		for (let y = RawDates[0][Y]; y <= RawDates[RawDates.length - 1][Y]; y++) {
 			calHtm += `<div>
-						<div class="w3-dropdown-hover w3-small">
-							<b class="w3-btn w3-yellow"> ${y} </b>
-							<div class="w3-dropdown-content w3-bar-block w3-border w3-card-4">
-								<b class="w3-bar-item w3-btn w3-hover-blue w3-text-blue" onclick=opTbl("pr",${y})> print / pdf </b>
-								<b class="w3-bar-item w3-btn w3-hover-red w3-text-red" onclick=opTbl("sh",${y})> share image </b>
-								<b class="w3-bar-item w3-btn w3-hover-green w3-text-green" onclick=getCsv(${y})> excel / csv </b>
-							</div>
-						</div>
-						<div class="w3-row w3-padding w3-center">`;
+				<div class="w3-dropdown-hover w3-small">
+					<b class="w3-btn w3-yellow"> ${y} </b>
+					<div class="w3-dropdown-content w3-bar-block w3-border w3-card-4">
+						<b class="w3-bar-item w3-btn w3-hover-blue w3-text-blue" onclick=opTbl("pr",${y})> print / pdf </b>
+						<b class="w3-bar-item w3-btn w3-hover-red w3-text-red" onclick=opTbl("sh",${y})> share image </b>
+						<b class="w3-bar-item w3-btn w3-hover-green w3-text-green" onclick=getCsv(${y})> excel / csv </b>
+					</div>
+				</div>
+				<div class="w3-row w3-padding w3-center">`;
 			for (let m = 0; m < 12; m++) {
 				calHtm += `<div class="w3-col s4 m4 l4 w3-padding-small">`;
 				let x = false;
 				for (let rd of RawDates) if (y == rd[Y] && m == rd[M]) x = true;
 				if (x) {
-					calHtm += 	`<div class="w3-dropdown-hover w3-small">
-									<b class="w3-btn w3-teal"> ${MONTH[m]} </b>
-									<div class="w3-dropdown-content w3-bar-block w3-border w3-card-4">
-										<b class="w3-bar-item w3-btn w3-hover-blue w3-text-blue" onclick=opTbl("pr",${y},${m})> print / pdf </b>
-										<b class="w3-bar-item w3-btn w3-hover-red w3-text-red" onclick=opTbl("sh",${y},${m})> share image </b>
-										<b class="w3-bar-item w3-btn w3-hover-green w3-text-green" onclick=getCsv(${y},${m})> excel / csv </b>
-									</div>
-								</div>`;
+					calHtm += `<div class="w3-dropdown-hover w3-small">
+							<b class="w3-btn w3-teal"> ${MONTH[m]} </b>
+							<div class="w3-dropdown-content w3-bar-block w3-border w3-card-4">
+								<b class="w3-bar-item w3-btn w3-hover-blue w3-text-blue" onclick=opTbl("pr",${y},${m})> print / pdf </b>
+								<b class="w3-bar-item w3-btn w3-hover-red w3-text-red" onclick=opTbl("sh",${y},${m})> share image </b>
+								<b class="w3-bar-item w3-btn w3-hover-green w3-text-green" onclick=getCsv(${y},${m})> excel / csv </b>
+							</div>
+						</div>`;
 					shDatHtm += `<option value="${y}_${m}" ${((m == NOW.getMonth() && y == NOW.getFullYear()) ? `selected` : ``)}> ${MONTH[m]} ${y} </option>`;
 				}else calHtm += `<p class="w3-light-gray w3-text-gray w3-round-xxlarge w3-padding-small"> ${MONTH[m]} </p>`;
 				calHtm += `</div>`;
 			}
-			calHtm += 	`</div>
-					</div>`;
+			calHtm += `</div>
+				</div>`;
 		}
 		$(`#downloadMonths`).html (calHtm);
 		$(`#showData`).html (shDatHtm);
@@ -245,9 +245,8 @@
 	}
 	function getCsv (y = 0, m = 0) {
 		let csv = [];
-		if (y) {
-			for (let i = 0; i < powMonData.length; i++) if (y == powMonData[i][Y] && (m ? (m == powMonData[i][M]) : 1)) csv.push (powMonData[i]);
-		}else csv = powMonData;
+		if (y) for (let i = 0; i < powMonData.length; i++) if (y == powMonData[i][Y] && (m ? (m == powMonData[i][M]) : 1)) csv.push (powMonData[i]);
+		else csv = powMonData;
 		downloadCsv (csv, `${(m ? `${MONTH[m]}_` : ``) + (y ? y : `AllData`)}`);
 	}
 	function getCsvPeriod() {
@@ -406,12 +405,12 @@
 		});
 		setTimeout (() => S_B.html (``), 3000);
 	}
-    function printDiv (id = ``) {
-       	newWin = window.open();
-       	newWin.document.write (`<style>` + (((id.match (/_/g))??[0]).length == 1 ? `body { columns: 300px 3; }`:``) + $(`#printDivStyle`).html() + `</style>` + $(`#printDiv${id}`).html());
-       	newWin.document.title = `${id} PowerMonitor`;
-       	newWin.print();
-    }
+	function printDiv (id = ``) {
+		newWin = window.open();
+		newWin.document.write (`<style>` + (((id.match (/_/g))??[0]).length == 1 ? `body { columns: 300px 3; }`:``) + $(`#printDivStyle`).html() + `</style>` + $(`#printDiv${id}`).html());
+		newWin.document.title = `${id} PowerMonitor`;
+		newWin.print();
+	}
 	function secToHMS (s) {
 		let hms = [0,0,0,0,0,0];
 		hms[h] = parseInt (s / 3600);
@@ -519,31 +518,31 @@
 							<tr> <td colspan="4"> Total Off Duration: ${TotDownDur[i]} </td> </tr>
 							${TH}`;
 			if (!(p % 2)) {		// if p is even
-				datHtm += 	`<tr>
-								<td> ${sn++} </td>
-								<td> </td>
-								<td class="w3-pale-red"> ${DownDur[j++]} </td>`;
+				datHtm += `<tr>
+					<td> ${sn++} </td>
+					<td> </td>
+					<td class="w3-pale-red"> ${DownDur[j++]} </td>`;
 			}
 			for (let k = 0; k < Tms[i].length; k++, p++) {
 				if (p % 2) {	// if p is odd
 					datHtm += `<tr>
-								<td> ${sn++} </td>
-								<td class="w3-text-red"> ${Tms[i][k]} </td>
-								<td class="w3-pale-red"> ${DownDur[j++]} </td>`;
+						<td> ${sn++} </td>
+						<td class="w3-text-red"> ${Tms[i][k]} </td>
+						<td class="w3-pale-red"> ${DownDur[j++]} </td>`;
 				}else {			// if p is even
-					datHtm += 	`<td class="w3-text-green"> ${Tms[i][k]} </td>
-							</tr>`;
+					datHtm += `<td class="w3-text-green"> ${Tms[i][k]} </td>
+						</tr>`;
 				}
 			}
 			if (!(p % 2)) datHtm += `<td> </td> </tr>`;		// if p is odd
-			datHtm += 	`</table>
+			datHtm += `</table>
+						</div>
 					</div>
-				</div>
-				<div class="w3-col s4 m4 l4">
-					${btn (`pr`, StrDates[i].replace (/\s/g, `_`))}
-					${btn (`sh`, i).replace (`%STY%`, `display:none;`)}
-				</div>
-			</div>`;
+					<div class="w3-col s4 m4 l4">
+						${btn (`pr`, StrDates[i].replace (/\s/g, `_`))}
+						${btn (`sh`, i).replace (`%STY%`, `display:none;`)}
+					</div>
+				</div>`;
 			$(`#powMonDataDiv`).html ($(`#powMonDataDiv`).html() + datHtm);
 		}
 		let x = StrDates.indexOf (`${DAY[NOW.getDay()]} ${NOW.getDate()} ${MONTH[NOW.getMonth()]} ${NOW.getFullYear()}`);
