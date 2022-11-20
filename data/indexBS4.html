@@ -1,0 +1,587 @@
+<!DOCTYPE HTML>
+<html style="scroll-behavior: smooth;">
+<title> Power Monitor </title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAMAAAC6V+0/AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABJlBMVEUAAAD8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX////0lTPXAAAAYHRSTlMAAETHy8vOmQsGpPhhPO2sCwSc5jg16f+CAQKTyhou5PtwGBwcCgCK/OHc4LQdJ9/sToH///hvAQRRbWiY/P6UCIu2Fh7Y0yxk/ulIC7n6awE/75AHALUUI60rT0MFKQT7sZrJAAAAAWJLR0RhsrBMhgAAAAd0SU1FB+UMHQYmLBhV0acAAADDSURBVBjTZc7XUgJREEXRewQBQclRJAdFkiRFyUlBJAfJ9P9/hYNWzXDH87hqV3Uz9jfgQqG8VKk1YNJwpSUi3TXOELjRC2gwcqHJLJjFCg5tdiKH08XZrVsI7zznxuD1EfkDwVA4Ijqi90L4EHuMJ5ISptL0u6eMeAnIEuXyRIXnFyksvr6VyhWq1urSJZzWIGq2uOsM7Q69f4B/Cd3eZx+y8GswHI15Y5hMZ3O5LdzLb5kxrNYbyENsd/gX7g9Hzn4ApbAeg7SozjkAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjEtMTItMjlUMDY6Mzg6NDQtMDU6MDC4cmFyAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIxLTEyLTI5VDA2OjM4OjQ0LTA1OjAwyS/ZzgAAAABJRU5ErkJggg==">
+<link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+<script src="jquery-3.5.1.min.js"> </script>
+<script src="bootstrap.bundle.min.js"> </script>
+<script src="html2canvas.min.js"> </script>
+<script src="power_data.js" id="power_data" > </script>
+<style>
+	body { margin:0; padding:0; overflow-y:scroll; }
+	header {
+		background-color: coral;
+		color: black;
+		font-size: 2vh;
+		padding: 1vh 0;
+		text-align: center;
+	}
+	footer {
+		background-color: black;
+		color: white;
+		padding: 5px;
+	}
+	svg {
+		height: 20px;
+		padding-bottom: 4px;
+		width: 20px;
+	}
+    table { text-align: center; }
+	.body { border:2px solid black; margin:0 auto; max-width:700px; }
+	.statusBar {
+		font-weight: bold;
+		margin: 10px;
+		text-align: center;
+		z-index: 10;
+	}
+	.datTbl { display: inline-block; }
+</style>
+<style id="printDiv">
+    table {
+		border-collapse: collapse;
+		margin-top: 10px;
+        text-align: center;
+    }
+	td { border: 1px solid black; }
+	th { border: 2px solid black; }
+	th, td {
+		font-size: 14px;
+		padding: 5px;
+		white-space: nowrap;
+	}
+	.text-danger { color: red; }
+	.table-danger { background-color: lightpink; }
+	.text-success { color: green; }
+</style>
+<script>
+	$('document').ready (() => {
+		addClassNameListener("detailsTab", () => { window.scrollTo(0,document.body.scrollHeight); });
+		docReady();
+		showPowerMonitorData();
+		createCalendar();
+		$('select#showData').change (() => {
+			showData();
+			createImgs();
+		});
+		$('form').submit (() => { event.preventDefault(); });
+	});
+  	const now = new Date();
+	function docReady() {
+		let timeNow = new FormData();
+		timeNow.append ("Y", now.getFullYear());
+		timeNow.append ("M", now.getMonth() + 1);
+		timeNow.append ("D", now.getDate());
+		timeNow.append ("h", now.getHours());
+		timeNow.append ("m", now.getMinutes());
+		timeNow.append ("s", now.getSeconds());
+		postFormData ("/documentReady", timeNow);
+		$('script#power_data').remove();
+		let script = document.createElement ("script");
+		script.src = "power_data.js?" + new Date().getTime();
+		script.id = "power_data";
+		document.head.append (script);
+	}
+	function postFormData (url, formData = new FormData()) {
+		$.ajax({
+			type: 'POST',
+			url: url,
+			enctype: 'multipart/form-data',
+			dataType: 'text',
+			data: formData,
+			contentType: false,
+			cache: false,
+			processData:false,
+			beforeSend : function() {
+				$('#statusBar').html ("<div class='spinner-border'></div>");
+			},
+			success: function (responseText) {
+				$('#statusBar').html (responseText);
+			},
+			error: function() {
+				$('#statusBar').html ("<p class='table-danger'> Server error, please try again. </p>");
+			}
+		});
+		setTimeout (function() { $('#statusBar').html (""); }, 3000);
+	}
+    function printDiv (id = '') {
+       	newWin = window.open();
+       	newWin.document.write("<style> " + ((id.match (/_/g)).length == 1 ? "body { columns: 300px 3; }":"") + $('style#printDiv').html() + " </style>" + $('div#printDiv' + id).html());
+       	newWin.document.title = id + " PowerMonitor";
+       	newWin.print();
+    }
+	function addClassNameListener(eleId, callback) {
+		var elem = document.getElementById(eleId);
+		var lastClassName = elem.className;
+		window.setInterval( function() {   
+		   var className = elem.className;
+			if (className !== lastClassName) {
+				callback();   
+				lastClassName = className;
+			}
+		},10);
+	}
+
+	const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+	const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+	const Y = 0, M = 1, D = 2, h = 3, m = 4, s = 5, S = 6, N = 7;
+	const updateHist = '220222 192500 OF,220224 230000 ON,220406 000000 OF,220407 000000 ON,220420 204500 OF,220421 000000 ON,220511 034202 OF,220515 150000 ON,220528 220000 OF,220528 223000 ON,220601 214500 OF,220601 220000 ON,220612 104500 OF,220613 204500 ON,220725 193000 OF,220725 203000 ON'; // date time of all maintenance breaks
+	
+	const tableHeadHtml = "<tr> <th> Sr.No. </th> <th> OFF Time </th> <th> OFF Duration </th> <th> ON Time </th> </tr>";
+	const btnHtml = "<button type='button' class='btn btn-sm btn-outline-%COLOR% mt-2' onclick=%ONCLK%> %LABEL% </button>";
+	const printBtnHtml = btnHtml.replace ("%COLOR%", "primary").replace ("%LABEL%", "print this table").replace ("%ONCLK%", "printDiv('%ID%')");
+	const shareBtnHtml = btnHtml.replace ("%COLOR%", "danger").replace ("%LABEL%", "share this table").replace ("%ONCLK%", "shareTbl(%ID%) id=shImgBtn%ID% style=%STY%");
+
+	var rawDates = [], strDates = [], rawTotDwnDur = [],totDownDur = [], tms = [], downDur = [], tableBlob = [];
+	var showMonth = now.getMonth(), showYear = now.getFullYear(), showSI = 0, showEI = 0;
+
+	function btn (type, id = "") { return (type == "pr" ? printBtnHtml : shareBtnHtml).replace (/%ID%/g, id); }
+	function tDf (t1, t2) {
+		if (t2 - t1 < 0) t2 = new Date();
+		let ds = (t2 - t1) / 1000, dif = [0, 0, 0, 0, 0, 0, 0];
+		dif[S] = ds;
+		dif[h] = parseInt (ds / 3600);
+		ds %= 3600;
+		dif[m] = parseInt (ds / 60);
+		dif[s] = parseInt (ds % 60);
+		return dif;
+	}
+	function tFmt (format, t = new Date(), interval = false) {
+		if (t == -1) return "-";
+		if (interval) {
+			if (t[h] == 0) {
+				format = format.replace ("%h", "");
+				format = format.replace ("h", "");
+			}
+			if (t[m] == 0) {
+				format = format.replace ("%m", "");
+				format = format.replace ("m", "");
+			}
+			if (t[s] == 0) {
+				format = format.replace ("%s", "");
+				format = format.replace ("s", "");
+			}
+		}
+		format = format.replace ("%Y", t[Y]);			//	year YYYY
+		format = format.replace ("%M", t[M]);			//	month MM
+		format = format.replace ("%D", t[D]);			//	day DD
+		format = format.replace ("%h", t[h]);			//	hours hh
+		format = format.replace ("%m", t[m]);			//	minutes mm
+		format = format.replace ("%s", t[s]);			//	seconds ss
+		format = format.replace ("%N", t[N]);			//	month MMM
+		format = format.replace ("%d", day[new Date (t[Y], t[M], t[D]).getDay()]);			//	day ddd
+		return format;
+	}
+	function secToHMS (s) {
+		let hms = [0,0,0,0,0,0];
+		hms[h] = parseInt (s / 3600);
+		s %= 3600;
+		hms[m] = parseInt (s / 60);
+		hms[s] = parseInt (s % 60);
+		return hms;
+	}
+	const zeroPad = (num, places) => String (num).padStart (places, '0')
+	function dataReady() {
+		rawDates.length = strDates.length = rawTotDwnDur.length = totDownDur.length = tms.length = downDur.length = tableBlob.length = 0;
+		showPowerMonitorData();
+		createCalendar();
+	}
+	function showUpdateHist() {
+		let updatHist = updateHist.split (",");
+		$('#updateHist').html ("Update / Maintenance History : ");
+		let i = 0;
+		for (let uh of updatHist)
+			updatHist[i++] = ["20" + uh.slice (0, 2), uh.slice (2, 4) - 1, uh.slice (4, 6), uh.slice (7, 9), uh.slice (9, 11), uh.slice (11, 13), 0, month[parseInt (uh.slice (2, 4)) - 1]];
+		for (let i = 0; i < updatHist.length; i++) $('#updateHist').html ($('#updateHist').html() + tFmt ("%d %D %N %Y", updatHist[i]) + (i % 2 ? " , " : " to "));
+	}
+	function showPowerMonitorData() {
+		if (powMonData == "" || powMonData == " ") {
+			$('#dataStatus').text ("No Data Available");
+			return;
+		}
+		powMonData = powMonData.split (",");
+		powMonData.pop();
+		let i = 0, j, k, dif, offDur = 0, offDurToday = 0, interCount = 0;
+		let prevState = "OF";
+		for (let dt of powMonData) {
+			if (dt.slice (0, 2) == "00") continue;	// skip all years where clock resets to 0000, clock battery failed
+			if (prevState == dt.slice (13)) continue;	// skip if adjacent values are of same state
+			prevState = dt.slice (13);
+			powMonData[i] = ["20" + dt.slice (0, 2), dt.slice (2, 4) - 1, dt.slice (4, 6), dt.slice (7, 9), dt.slice (9, 11), dt.slice (11, 13), 0, month[parseInt (dt.slice (2, 4)) - 1]];
+			i++;
+		}
+		powMonData.length = i;
+		$('#dataStatus').text("");
+		rawDates.push (powMonData[0]);
+		strDates.push (tFmt ("%d %D %N %Y", powMonData[0]));
+		rawTotDwnDur.push (0);
+		totDownDur.push (0);
+		tms.push ([]);
+		tableBlob.push (0);
+		for (i = 1, j = 0; i < powMonData.length; i++) {
+			if (powMonData[i - 1][D] != powMonData[i][D] || powMonData[i - 1][M] != powMonData[i][M] || powMonData[i - 1][Y] != powMonData[i][Y]) {
+				rawDates.push (powMonData[i]);
+				strDates.push (tFmt ("%d %D %N %Y", powMonData[i]));
+				rawTotDwnDur.push (0);
+				totDownDur.push (0);
+				tableBlob.push (0);
+				tms.push ([]);
+				j++;
+			}
+			tms[j].push (tFmt("%h:%m:%s", powMonData[i]));
+		}
+		for (let offT = 1, onT = 2, i = 0; offT < powMonData.length - 1; offT+=2, onT=offT + 1, i++) {
+			let tOff = new Date (powMonData[offT][Y], powMonData[offT][M], powMonData[offT][D], powMonData[offT][h], powMonData[offT][m], powMonData[offT][s]);
+			if (powMonData[offT][Y] == powMonData[onT][Y] && powMonData[offT][M] == powMonData[onT][M] && powMonData[offT][D] == powMonData[onT][D]) {
+				let tOn = new Date (powMonData[onT][Y], powMonData[onT][M], powMonData[onT][D], powMonData[onT][h], powMonData[onT][m], powMonData[onT][s]);
+				dif = tDf (tOff, tOn);
+				downDur.push (tFmt ("%hh %mm %ss", dif, true));
+				offDur += dif[S];
+			}else {
+				let tOn = new Date (powMonData[onT][Y], powMonData[onT][M], powMonData[onT][D]);
+				dif = tDf (tOff, tOn);
+				downDur.push (tFmt ("%hh %mm %ss", dif, true));
+				offDur += dif[S];
+				rawTotDwnDur[strDates.indexOf (tFmt ("%d %D %N %Y", powMonData[offT]))] = offDur;
+
+				totDownDur[strDates.indexOf (tFmt ("%d %D %N %Y", powMonData[offT]))] = tFmt ("%hh %mm %ss", secToHMS (offDur), true);
+				tOff = tOn;
+				tOn = new Date (powMonData[onT][Y], powMonData[onT][M], powMonData[onT][D], powMonData[onT][h], powMonData[onT][m], powMonData[onT][s]);
+				dif = tDf (tOff, tOn);
+				downDur.push (tFmt ("%hh %mm %ss", dif, true));
+				offDur = dif[S];
+			}
+			if (!powMonData[onT + 1] || powMonData[onT][Y] != powMonData[onT + 1][Y] || powMonData[onT][M] != powMonData[onT + 1][M] || powMonData[onT][D] != powMonData[onT + 1][D]) {
+				rawTotDwnDur[strDates.indexOf (tFmt ("%d %D %N %Y", powMonData[onT]))] = offDur;
+				totDownDur[strDates.indexOf (tFmt ("%d %D %N %Y", powMonData[onT]))] = tFmt ("%hh %mm %ss", secToHMS (offDur), true);
+				offDur = 0;
+			}
+		}
+		for (i = 0; i < rawDates.length; i++) {
+			if (rawDates[i][Y] == showYear && rawDates[i][M] == showMonth && !showSI) showSI = i;
+			if (rawDates[i][Y] == showYear && rawDates[i][M] == showMonth) showEI = i + 1;
+		}
+		$('#powMonDataDiv').html("");
+		let sn = 1;
+		for (i = 0, j = 0, p = 1; i < strDates.length; i++, sn = 1) {
+			let datHtm = "<div class='row datRow' id='dataRow" + strDates[i].replace (/\s/g, "_") + "' " + ((i < showSI || showEI < i) ? "style='display:none;'" : "") + ">";
+			datHtm += 	"<div class='col-8'>";
+			datHtm += 		"<img src='' class='img-fluid' style='display:none;' id='datImg" + strDates[i].replace (/\s/g, "_") + "' alt='" + strDates[i] + "'/>";
+			datHtm += 		"<div class='datTbl' id='printDiv" + strDates[i].replace (/\s/g, "_") + "'>";
+			datHtm += 			"<table> <tr> <th colspan='4'>" + strDates[i] + "</th> </tr>";
+			datHtm += 				"<tr> <td colspan='4'> Total Off Duration: " + totDownDur[i] + "</td> </tr>";
+			datHtm += tableHeadHtml;
+			if (!(p % 2)) {		// if p is even
+				datHtm += 			"<tr>";
+				datHtm += 				"<td>" + sn++ + "</td>";
+				datHtm += 				"<td> </td>";
+				datHtm += 				"<td class='table-danger'>" + downDur[j++] + "</td>";
+			}
+			for (let k = 0; k < tms[i].length; k++, p++) {
+				if (p % 2) {	// if p is odd
+					datHtm += 		"<tr>";
+					datHtm += 			"<td>" + sn++ + "</td>";
+					datHtm += 			"<td class='text-danger'>" + tms[i][k] + "</td>";
+					datHtm += 			"<td class='table-danger'>" + downDur[j++] + "</td>";
+				}else {			// if p is even
+					datHtm += 			"<td class='text-success'>" + tms[i][k] + "</td>";
+					datHtm += 		"</tr>";
+				}
+			}
+			if (!(p % 2)) datHtm += "<td> </td> </tr>";		// if p is odd
+			datHtm += 			"</table>";
+			datHtm += 		"</div>";
+			datHtm += 	"</div>";
+			datHtm += 	"<div class='col-4'>";
+			datHtm +=		btn ("pr", strDates[i].replace (/\s/g, "_"));
+			datHtm +=		btn ("sh", i).replace ("%STY%", "display:none;");
+			datHtm += 	"</div>";
+			datHtm += "</div>";
+
+			$('#powMonDataDiv').html($('#powMonDataDiv').html() + datHtm);
+		}
+		let x = strDates.indexOf (day[now.getDay()] + " " + now.getDate() + " " + month[now.getMonth()] + " " + now.getFullYear());
+		if (x != -1) {
+			offDurToday = totDownDur[x];
+			interCount = parseInt (tms[x].length / 2);
+		}
+		$('#offDurToday').html (offDurToday);
+		$('#interCount').html (interCount);
+		showUpdateHist();
+		$('#repFr')[0].min = $('#repTo')[0].min = rawDates[0][Y] + "-" + zeroPad (rawDates[0][M] + 1, 2) + "-" + zeroPad (rawDates[0][D], 2);
+		$('#repFr')[0].max = $('#repTo')[0].max = rawDates[rawDates.length - 1][Y] + "-" + zeroPad (rawDates[rawDates.length - 1][M] + 1, 2) + "-" + zeroPad (rawDates[rawDates.length - 1][D], 2);
+	}
+	function createCalendar() {
+		var calHtm = "", shDatHtm = "<option value='all'> All Data </option>", dat;
+		for (let y = parseInt (rawDates[0][Y]); y <= parseInt (rawDates[rawDates.length - 1][Y]); y++) {
+			calHtm += "<div>";
+			calHtm += 	"<div class='dropdown'>";
+			calHtm += 		"<button type='button' class='btn dropdown-toggle px-5 btn-outline-warning' data-toggle='dropdown'>" + y + "</button>";
+			calHtm += 		"<div class='dropdown-menu'>";
+			calHtm += 			"<div class='dropdown-item text-primary' onclick=opTbl('pr'," + y + ")> print / pdf </div>";
+			calHtm += 			"<div class='dropdown-item text-danger' onclick=opTbl('sh'," + y + ")> share image </div>";
+			calHtm += 			"<div class='dropdown-item text-success' > excel / csv </div>";
+			calHtm += 		"</div>";
+			calHtm += 	"</div>";
+			calHtm += 	"<div class='row p-3 text-center'>";
+			for (let m = 0; m < 12; m++) {
+				calHtm += "<div class='col-4 p-2'>";
+				let x = false;
+				for (let rd of rawDates) if (y == parseInt (rd[Y]) && m == parseInt (rd[M])) x = true;
+				if (x) {
+					calHtm += 	"<div class='dropdown'>";
+					calHtm += 		"<button type='button' class='btn dropdown-toggle px-5 btn-outline-info' data-toggle='dropdown'>" + month[m] + "</button>";
+					calHtm += 		"<div class='dropdown-menu'>";
+					calHtm += 			"<div class='dropdown-item text-primary' onclick=opTbl('pr'," + y + "," + m + ")> print / pdf </div>";
+					calHtm += 			"<div class='dropdown-item text-danger' onclick=opTbl('sh'," + y + "," + m + ")> share image </div>";
+					calHtm += 			"<div class='dropdown-item text-success' > excel / csv </div>";
+					calHtm += 		"</div>";
+					calHtm += 	"</div>";
+					shDatHtm += "<option value='" + y + "_" + m + "' " + ((m == now.getMonth() && y == now.getFullYear()) ? "selected" : "") + ">" + month[m] + " " + y + "</option>";
+				}else calHtm += "<p class='p-2 table-secondary text-secondary'>" + month[m] + "</p>";
+				calHtm += "</div>";
+			}
+			calHtm += 	"</div>";
+			calHtm += "</div>";
+		}
+		$('#downloadMonths').html (calHtm);
+		$('#showData').html (shDatHtm);
+	}
+	async function getTbls (y, m) {
+		let sumIntrCnt = 0, sumDwnDur = 0;
+		$('div#printDiv').html ("");
+		if (y) {
+			if (m) {
+				for (let i = 0; i < rawDates.length; i++)
+					if (y == parseInt (rawDates[i][Y]) && m == parseInt (rawDates[i][M])) {
+						$('div#printDiv').html ($('div#printDiv').html() + $('div#printDiv' + strDates[i].replace (/\s/g, "_")).html());
+						sumIntrCnt += tms[i].length / 2;
+						sumDwnDur += rawTotDwnDur[i];
+					}
+			}else {
+				for (let i = 0; i < rawDates.length; i++)
+					if (y == parseInt (rawDates[i][Y])) {
+						$('div#printDiv').html ($('div#printDiv').html() + $('div#printDiv' + strDates[i].replace (/\s/g, "_")).html());
+						sumIntrCnt += tms[i].length /  2;
+						sumDwnDur += rawTotDwnDur[i];
+					}
+			}
+			let sumHtm = "<b> <p> <i> Total Interruptions: </i> " + sumIntrCnt + "<br> <i> Total Down Duration: </i>" + tFmt ("%hh %mm %ss", secToHMS (sumDwnDur), true) + "</p> </b>";
+			$('div#printDiv').html (sumHtm + $('div#printDiv').html() + "<br>" + sumHtm + "<br>");
+
+		}else $('div#printDiv').html ($('.datTbl').html());
+		let id = (m ? month[m] + "_" : "") + (y ? y : "AllData");
+		$('div#printDiv').html ("<div id='printDiv" + id +  "'>" + $('div#printDiv').html() + "</div><img class='img-fluid' id='datImg" + id + "'/>");
+		return id;
+	}
+	function showData() {
+		showSI = showEI = 0;
+		let sel = $('#showData').val();
+		if (sel == "all") {
+			$('.datRow').show();
+			showSI = 0;
+			showEI = strDates.length;
+		}else {
+			showYear = sel.split ("_")[Y];
+			showMonth = sel.split ("_")[M];
+			for (let i = 0; i < rawDates.length; i++) {
+				if (rawDates[i][Y] == showYear && rawDates[i][M] == showMonth && !showSI) showSI = i;
+				if (rawDates[i][Y] == showYear && rawDates[i][M] == showMonth) showEI = i + 1;
+			}
+			$('.datRow').hide();
+			for (let i = showSI; i < showEI; i++) $('#dataRow' + strDates[i].replace (/\s/g, "_")).show();
+		}
+	}
+	function createImgs() {
+		for (let i = showSI; i < showEI; i++)
+			if (!tableBlob[i] || !$('#datImg' + strDates[i].replace (/\s/g, "_"))[0].complete || !$('#datImg' + strDates[i].replace (/\s/g, "_"))[0].naturalHeight)
+				htmlToImg (strDates[i].replace (/\s/g, "_"));
+	}
+	function htmlToImg (id = "") {
+		html2canvas ($('div#printDiv' + id)[0])
+			.then (canvas => { canvas.toBlob (function (blob) {
+						tableBlob[strDates.indexOf (id.replace (/_/g, " "))] = blob;
+						$('#datImg' + id)[0].onload = function() {
+								URL.revokeObjectURL (url);
+								$('#datImg' + id).show();
+								$('button#shImgBtn' + strDates.indexOf (id.replace (/_/g, " "))).show();
+								$('div#printDiv' + id).hide();
+							};
+						var url = URL.createObjectURL (blob);
+						$('#datImg' + id)[0].src = url;
+					});
+				});
+	}
+	function share (blob, name) { navigator.share ({ files: [new File ([blob], name + "PowerMonitor.png", { type: blob.type, lastModified: new Date().getTime() })] }); }
+	function shareTbl (n) { share (tableBlob[n], strDates[n].replace (/\s/g, "_")); }
+	function opTbl (op, y = 0, m = 0) {
+		switch (op) {
+			case "pr" :
+				getTbls (y, m).then (id => { printDiv (id); });
+				break;
+			case "sh" :
+				getTbls (y, m)
+					.then ((id) => {
+						$('div#printDiv').show();
+						html2canvas ($('div#printDiv' + id)[0])
+							.then (canvas => {
+								canvas.toBlob ((blob) => {
+									//	share (blob, id);
+										$('#datImg' + id)[0].onload = function() {
+											URL.revokeObjectURL (url);
+											$('#datImg' + id).show();
+											$('div#printDiv' + id).hide();
+										};
+										var url = URL.createObjectURL (blob);
+										$('#datImg' + id)[0].src = url;
+									});
+							});
+					});
+				break;
+		}
+	}
+	function opTables (op, id) {
+		switch (op) {
+			case "pr" :
+				printDiv (id);
+				break;
+			case "sh" :
+				$('div#printDiv').show();
+				html2canvas ($('div#printDiv' + id)[0])
+					.then (canvas => {
+						canvas.toBlob ((blob) => {
+							//	share (blob, id);
+								$('#datImg' + id)[0].onload = function() {
+									URL.revokeObjectURL (url);
+									$('#datImg' + id).show();
+									$('div#printDiv' + id).hide();
+								};
+								var url = URL.createObjectURL (blob);
+								$('#datImg' + id)[0].src = url;
+							});
+					});
+				break;
+		}
+	}
+	function getTables (op) {
+		if ($('#repFr').val() == "" || $('#repTo').val() == "") return;
+		if ($('#repTo').val() < $('#repFr').val()) {
+			$('#downloadDataStatus').html ("<p class='table-danger'> From Date must be before To Date. </p>");
+			return;
+		}
+		let divEmpty = true;
+		$('div#printDiv').html("");
+		$('#downloadDataStatus').html("");
+		let sd = $('#repFr').val();
+		let nd = (tDf (new Date (sd), new Date ($('#repTo').val()))[S] / (24 * 3600)) + 1;
+		sd = sd.split ("-");
+		for (let d = 0; d < nd; d++) {
+			let cD = new Date (sd[Y], sd[M] - 1, parseInt (sd[D]) + d);
+			let id = day[cD.getDay()] + "_" + cD.getDate() + "_" + month[cD.getMonth()] + "_" + cD.getFullYear();
+			if (strDates.indexOf (id.replace (/_/g, " ")) != -1) {
+				$('div#printDiv').html ($('div#printDiv').html() + $('div#printDiv' + id).html());
+				divEmpty = false;
+			}
+		}
+		let id = ($('#repFr').val() + "_to_" + $('#repTo').val()).replace (/-/g, "_");
+		$('div#printDiv').html ("<div id='printDiv" + id +  "'>" + $('div#printDiv').html() + "</div><img class='img-fluid' id='datImg" + id + "'/>");
+		if (divEmpty) $('#downloadDataStatus').html ("<p class='table-danger'> No data present for period " + id.replace (/_/g, " ") + ". </p>");
+		else opTables (op, id);
+	}
+</script>
+<body> <div class="body">
+	<header> <h3> <img src="data:image/png;base64,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" />
+		Power Monitor </h3> </header>
+
+	<div id="statusBar" class="statusBar sticky-top"> </div>
+
+	<a href="#" class="btn btn-outline-warning float-right sticky-top mr-3" onclick="docReady();">
+		<svg viewBox="0 0 1792 1792">
+			<path d="M1639 1056q0 5-1 7-64 268-268 434.5t-478 166.5q-146 0-282.5-55t-243.5-157l-129 129q-19 19-45 19t-45-19-19-45v-448q0-26 19-45t45-19h448q26 0 45 19t19 45-19 45l-137 137q71 66 161 102t187 36q134 0 250-65t186-179q11-17 53-117 8-23 30-23h192q13 0 22.5 9.5t9.5 22.5zm25-800v448q0 26-19 45t-45 19h-448q-26 0-45-19t-19-45 19-45l138-138q-148-137-349-137-134 0-250 65t-186 179q-11 17-53 117-8 23-30 23h-199q-13 0-22.5-9.5t-9.5-22.5v-7q65-268 270-434.5t480-166.5q146 0 284 55.5t245 156.5l130-129q19-19 45-19t45 19 19 45z"  fill="currentColor" />
+		</svg>
+	</a>
+
+	<div style="min-height:72vh;">
+		<ul class="nav nav-tabs" role="tablist">
+			<li class="nav-item"> <a class="nav-link active" data-toggle="tab" id="homeTabNav" href="#homeTab">
+				<svg viewBox="0 0 1792 1792">
+					<path d="M1472 992v480q0 26-19 45t-45 19h-384v-384h-256v384h-384q-26 0-45-19t-19-45v-480q0-1 .5-3t.5-3l575-474 575 474q1 2 1 6zm223-69l-62 74q-8 9-21 11h-3q-13 0-21-7l-692-577-692 577q-12 8-24 7-13-2-21-11l-62-74q-8-10-7-23.5t11-21.5l719-599q32-26 76-26t76 26l244 204v-195q0-14 9-23t23-9h192q14 0 23 9t9 23v408l219 182q10 8 11 21.5t-7 23.5z" fill="currentColor" />
+				</svg> Home
+			</a> </li>
+			<li class="nav-item"> <a class="nav-link " data-toggle="tab" id="detailsTabNav" href="#detailsTab">
+				<svg viewBox="0 0 1792 1792">
+					<path d="M640 896v512h-256v-512h256zm384-512v1024h-256v-1024h256zm1024 1152v128h-2048v-1536h128v1408h1920zm-640-896v768h-256v-768h256zm384-384v1152h-256v-1152h256z" fill="currentColor" />
+				</svg> Details
+			</a> </li>
+		</ul>
+		<div class="tab-content px-2">
+			<div id="homeTab" class="tab-pane active"><br>
+				<p> Total Down Duration Today: <b> <span id="offDurToday"> </span> </b> </p>
+				<p> Interruption Count: <b> <span id="interCount"> </span> </b> </p>
+				<!-- <div id="pieChart"> <center> <h5> Pie Chart </h5> </center> </div> -->
+				<a class="btn btn-dark btn-sm mx-auto d-block" onclick="$('#detailsTabNav').click();">
+					<svg viewBox="0 0 1792 1792">
+						<path d="M640 896v512h-256v-512h256zm384-512v1024h-256v-1024h256zm1024 1152v128h-2048v-1536h128v1408h1920zm-640-896v768h-256v-768h256zm384-384v1152h-256v-1152h256z" fill="currentColor" />
+					</svg> Details </a>
+				<hr>
+				<div class="text-center">
+					<h5 class="my-4"> Downloads </h5>
+					<form>
+						<div class="row mx-auto" style="max-width:500px;">
+							<p class="col"> From <input type="date" class="form-control-sm" id="repFr" required /> </p>
+							<p class="col"> To <input type="date" class="form-control-sm" id="repTo" required /> </p>
+						</div>
+						<div id="downloadDataStatus"> </div>
+						<button type="submit" class="btn btn-sm btn-outline-primary my-1" onclick="getTables('pr')">
+							<svg viewBox="0 0 1792 1792">
+								<path d="M448 1536h896v-256h-896v256zm0-640h896v-384h-160q-40 0-68-28t-28-68v-160h-640v640zm1152 64q0-26-19-45t-45-19-45 19-19 45 19 45 45 19 45-19 19-45zm128 0v416q0 13-9.5 22.5t-22.5 9.5h-224v160q0 40-28 68t-68 28h-960q-40 0-68-28t-28-68v-160h-224q-13 0-22.5-9.5t-9.5-22.5v-416q0-79 56.5-135.5t135.5-56.5h64v-544q0-40 28-68t68-28h672q40 0 88 20t76 48l152 152q28 28 48 76t20 88v256h64q79 0 135.5 56.5t56.5 135.5z" fill="currentColor" />
+							</svg>
+							Print / Save as PDF
+						</button>
+						<button type="submit" class="btn btn-sm btn-outline-danger my-1" onclick="getTables('sh')">
+							<svg viewBox="0 0 1792 1792">
+								<path d="M1344 1024q133 0 226.5 93.5t93.5 226.5-93.5 226.5-226.5 93.5-226.5-93.5-93.5-226.5q0-12 2-34l-360-180q-92 86-218 86-133 0-226.5-93.5t-93.5-226.5 93.5-226.5 226.5-93.5q126 0 218 86l360-180q-2-22-2-34 0-133 93.5-226.5t226.5-93.5 226.5 93.5 93.5 226.5-93.5 226.5-226.5 93.5q-126 0-218-86l-360 180q2 22 2 34t-2 34l360 180q92-86 218-86z" fill="currentColor" />
+							</svg>
+							Share as image
+						</button>
+						<!-- <button type="submit" class="btn btn-sm btn-outline-success my-1" >
+							<svg viewBox="0 0 1792 1792">
+								<path d="M1596 380q28 28 48 76t20 88v1152q0 40-28 68t-68 28h-1344q-40 0-68-28t-28-68v-1600q0-40 28-68t68-28h896q40 0 88 20t76 48zm-444-244v376h376q-10-29-22-41l-313-313q-12-12-41-22zm384 1528v-1024h-416q-40 0-68-28t-28-68v-416h-768v1536h1280zm-979-234v106h281v-106h-75l103-161q5-7 10-16.5t7.5-13.5 3.5-4h2q1 4 5 10 2 4 4.5 7.5t6 8 6.5 8.5l107 161h-76v106h291v-106h-68l-192-273 195-282h67v-107h-279v107h74l-103 159q-4 7-10 16.5t-9 13.5l-2 3h-2q-1-4-5-10-6-11-17-23l-106-159h76v-107h-290v107h68l189 272-194 283h-68z" fill="currentColor" />
+							</svg>
+							Save as CSV / Excel
+						</button> -->
+					</form>
+					<h6 class="my-4"> Monthwise </h6>
+					<div id="downloadMonths"> No data available </div>
+				</div>
+				<div id="printDiv" style="display:none;"> </div>
+				<small> <p id="updateHist"> </p> </small>
+			</div>
+
+			<div id="detailsTab" class="tab-pane "> <br>
+				<b> <p class="table-warning" id="dataStatus"> </p> </b>
+				<p> <i> To save as PDF go to <input type="text" id="gotoIp" value="http://192.168.4.1/" /> in your browser </i> 
+					<button type="button" class="btn btn-outline-info"
+						onclick="$('#gotoIp')[0].select();$('#gotoIp')[0].setSelectionRange(0,99999);document.execCommand('copy');"
+						> click to copy </button>
+				</p>
+				<p> Long press on table to share as image. </p>
+				<p class="sticky-top py-2 w-50 mx-auto"> <select class="form-control form-control-sm" id="showData"> </select> </p>
+				<button type="button" class="btn btn-sm btn-outline-primary" data-toggle="tooltip" title="Print all data" onclick="opTbl('pr')">
+					<svg viewBox="0 0 1792 1792">
+						<path d="M448 1536h896v-256h-896v256zm0-640h896v-384h-160q-40 0-68-28t-28-68v-160h-640v640zm1152 64q0-26-19-45t-45-19-45 19-19 45 19 45 45 19 45-19 19-45zm128 0v416q0 13-9.5 22.5t-22.5 9.5h-224v160q0 40-28 68t-68 28h-960q-40 0-68-28t-28-68v-160h-224q-13 0-22.5-9.5t-9.5-22.5v-416q0-79 56.5-135.5t135.5-56.5h64v-544q0-40 28-68t68-28h672q40 0 88 20t76 48l152 152q28 28 48 76t20 88v256h64q79 0 135.5 56.5t56.5 135.5z" fill="currentColor" />
+					</svg>
+				</button>
+				<div id="powMonDataDiv"> </div> <br>
+				<a class="btn btn-dark btn-sm mx-auto" onclick="$('#homeTabNav').click();">
+					<svg viewBox="0 0 1792 1792">
+						<path d="M1472 992v480q0 26-19 45t-45 19h-384v-384h-256v384h-384q-26 0-45-19t-19-45v-480q0-1 .5-3t.5-3l575-474 575 474q1 2 1 6zm223-69l-62 74q-8 9-21 11h-3q-13 0-21-7l-692-577-692 577q-12 8-24 7-13-2-21-11l-62-74q-8-10-7-23.5t11-21.5l719-599q32-26 76-26t76 26l244 204v-195q0-14 9-23t23-9h192q14 0 23 9t9 23v408l219 182q10 8 11 21.5t-7 23.5z" fill="currentColor" />
+					</svg> Home </a>
+			</div>
+		</div>
+	</div>
+
+	<footer> <center> <small> Power Failure Logging &amp; Monitoring System | <a href="https://github.com/sman333/Power-Monitor" title="github" target="_blank"> Github </a> </small> </center> </footer>
+</div> </body>
+</html>
+
