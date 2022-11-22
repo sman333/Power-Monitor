@@ -4,9 +4,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAMAAAC6V+0/AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABJlBMVEUAAAD8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX////0lTPXAAAAYHRSTlMAAETHy8vOmQsGpPhhPO2sCwSc5jg16f+CAQKTyhou5PtwGBwcCgCK/OHc4LQdJ9/sToH///hvAQRRbWiY/P6UCIu2Fh7Y0yxk/ulIC7n6awE/75AHALUUI60rT0MFKQT7sZrJAAAAAWJLR0RhsrBMhgAAAAd0SU1FB+UMHQYmLBhV0acAAADDSURBVBjTZc7XUgJREEXRewQBQclRJAdFkiRFyUlBJAfJ9P9/hYNWzXDH87hqV3Uz9jfgQqG8VKk1YNJwpSUi3TXOELjRC2gwcqHJLJjFCg5tdiKH08XZrVsI7zznxuD1EfkDwVA4Ijqi90L4EHuMJ5ISptL0u6eMeAnIEuXyRIXnFyksvr6VyhWq1urSJZzWIGq2uOsM7Q69f4B/Cd3eZx+y8GswHI15Y5hMZ3O5LdzLb5kxrNYbyENsd/gX7g9Hzn4ApbAeg7SozjkAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjEtMTItMjlUMDY6Mzg6NDQtMDU6MDC4cmFyAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIxLTEyLTI5VDA2OjM4OjQ0LTA1OjAwyS/ZzgAAAABJRU5ErkJggg==">
 <link rel="stylesheet" href="w3.css">
-<script src="jquery-3.5.1.min.js"> </script>
-<script src="html2canvas.min.js"> </script>
-<script src="power_data.js" id="power_data" > </script>
+<script src="jquery-3.5.1.min.js" defer> </script>
+<script src="html2canvas.min.js" defer> </script>
+<script src="power_data.js" id="power_data" defer> </script>
 <style>
 	svg {
 		height: 20px;
@@ -143,7 +143,7 @@
 	<a href="https://github.com/sman333/Power-Monitor" title="github" target="_blank" class="w3-hover-opacity"> Github </a> | Powered By
 	<a href="https://www.w3schools.com/w3css/default.asp" title="W3.CSS" target="_blank" class="w3-hover-opacity"> w3.css </a>
 </small> </center> </footer>
-<script>
+<script defer>
 	const P_D = $(`#printDiv`);
 	const DAY = [`Sun`, `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`];
 	const MONTH = [`Jan`, `Feb`, `Mar`, `Apr`, `May`, `Jun`, `Jul`, `Aug`, `Sep`, `Oct`, `Nov`, `Dec`];
@@ -227,21 +227,14 @@
 		timeNow.append (`s`, NOW.getSeconds());
 		postFormData (`/documentReady`, timeNow);
 		$(`#power_data`).remove();
-		let script = document.createElement (`script`);
-		script.src = `power_data.js?` + new Date().getTime();
-		script.id = `power_data`;
-		document.head.append (script);
+		$(`head`).append (`<script src="power_data.js?${new Date().getTime()}" id="power_data" defer> </script>`);
 	}
 	function downloadCsv (csv, name) {
 		powMonData.indexOf (csv[0]) % 2 ? `` : csv.shift();
 		for (let i = 0; i < csv.length; i++) csv[parseInt (i / 2)] = ((i % 2) ? `${csv[parseInt (i / 2)]},`:``) + csv[i].slice (0, s + 1).join (` `);
 		csv.length = Math.ceil (csv.length / 2);
-		let a = document.createElement (`a`);
-		a.download = `${name.replace (/\s/g, `_`)} PowerMonitor`;
-		a.href = URL.createObjectURL (new Blob ([csv.join (`\n`)], { "type": "text/csv" }));
-		document.body.appendChild (a);
-		a.click();
-		document.body.removeChild (a);
+		$(`body`).append (`<a id="downloadLink" download="${name.replace (/\s/g, `_`)} PowerMonitor" href="${URL.createObjectURL (new Blob ([csv.join (`\n`)], { "type": "text/csv" }))}"> </a>`);
+		$(`#downloadLink`).click().remove();
 	}
 	function getCsv (y = 0, m = 0) {
 		let csv = [];
