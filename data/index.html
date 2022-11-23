@@ -4,9 +4,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAMAAAC6V+0/AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABJlBMVEUAAAD8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX8vlX////0lTPXAAAAYHRSTlMAAETHy8vOmQsGpPhhPO2sCwSc5jg16f+CAQKTyhou5PtwGBwcCgCK/OHc4LQdJ9/sToH///hvAQRRbWiY/P6UCIu2Fh7Y0yxk/ulIC7n6awE/75AHALUUI60rT0MFKQT7sZrJAAAAAWJLR0RhsrBMhgAAAAd0SU1FB+UMHQYmLBhV0acAAADDSURBVBjTZc7XUgJREEXRewQBQclRJAdFkiRFyUlBJAfJ9P9/hYNWzXDH87hqV3Uz9jfgQqG8VKk1YNJwpSUi3TXOELjRC2gwcqHJLJjFCg5tdiKH08XZrVsI7zznxuD1EfkDwVA4Ijqi90L4EHuMJ5ISptL0u6eMeAnIEuXyRIXnFyksvr6VyhWq1urSJZzWIGq2uOsM7Q69f4B/Cd3eZx+y8GswHI15Y5hMZ3O5LdzLb5kxrNYbyENsd/gX7g9Hzn4ApbAeg7SozjkAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjEtMTItMjlUMDY6Mzg6NDQtMDU6MDC4cmFyAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIxLTEyLTI5VDA2OjM4OjQ0LTA1OjAwyS/ZzgAAAABJRU5ErkJggg==">
 <link rel="stylesheet" href="w3.css">
-<script src="jquery-3.5.1.min.js" defer> </script>
+<script src="jquery-3.5.1.min.js"> </script>
 <script src="html2canvas.min.js" defer> </script>
-<script src="power_data.js" id="power_data" defer> </script>
+<script src="power_data.js" id="power_data"> </script>
 <style>
 	svg {
 		height: 20px;
@@ -149,7 +149,7 @@
 	const MONTH = [`Jan`, `Feb`, `Mar`, `Apr`, `May`, `Jun`, `Jul`, `Aug`, `Sep`, `Oct`, `Nov`, `Dec`];
 	const NOW = new Date();
 	const Y = 0, M = 1, D = 2, h = 3, m = 4, s = 5, N = 6, S = 7;
-	const UPDATE_HIST = `220222 192500 OF,220224 230000 ON,220406 000000 OF,220407 000000 ON,220420 204500 OF,220421 000000 ON,220511 034202 OF,220515 150000 ON,220528 220000 OF,220528 223000 ON,220601 214500 OF,220601 220000 ON,220612 104500 OF,220613 204500 ON,220725 193000 OF,220725 203000 ON`; // date time of all maintenance breaks
+	const UPDATE_HIST = `220222 192500 OF,220224 230000 ON,220406 000000 OF,220407 000000 ON,220420 204500 OF,220421 000000 ON,220511 034202 OF,220515 150000 ON,220528 220000 OF,220528 223000 ON,220601 214500 OF,220601 220000 ON,220612 104500 OF,220613 204500 ON,220725 193000 OF,220725 203000 ON,221121 193000 OF,221121 221500 ON`; // date time of all maintenance breaks(month 01 to 12)
 	const TH = `<tr> <th> Sr.No. </th> <th> OFF Time </th> <th> OFF Duration </th> <th> ON Time </th> </tr>`;
 	const BTN_HTML = `<b class="w3-btn w3-small w3-round w3-border w3-border-%COLOR% w3-text-%COLOR% w3-hover-%COLOR% w3-margin-top" onclick=%ONCLK%> %LABEL% </b>`;
 	const PRINT_BTN_HTML = BTN_HTML.replace (/%COLOR%/g, `blue`).replace (`%LABEL%`, `print this table`).replace (`%ONCLK%`, `printDiv("%ID%")`);
@@ -227,7 +227,10 @@
 		timeNow.append (`s`, NOW.getSeconds());
 		postFormData (`/documentReady`, timeNow);
 		$(`#power_data`).remove();
-		$(`head`).append (`<script src="power_data.js?${new Date().getTime()}" id="power_data" defer> </script>`);
+		let script = document.createElement (`script`);
+		script.src = `power_data.js?${new Date().getTime()}`;
+		script.id = `power_data`;
+		document.head.append (script);
 	}
 	function downloadCsv (csv, name) {
 		powMonData.indexOf (csv[0]) % 2 ? `` : csv.shift();
@@ -550,12 +553,12 @@
 		$(`#repFr`)[0].max = $(`#repTo`)[0].max = `${RawDates[RawDates.length - 1][Y]}-${zeroPad (RawDates[RawDates.length - 1][M] + 1, 2)}-${zeroPad (RawDates[RawDates.length - 1][D], 2)}`;
 	}
 	function showUpdateHist() {
-		let updatHist = UPDATE_HIST.split (`,`);
-		$(`#updateHist`).html (`Update / Maintenance History : `);
+		let hist = [], updatHist = UPDATE_HIST.split (`,`);
+		$(`#updateHist`).html (`Update / Maintenance Break History : `);
 		let i = 0;
-		for (let uh of updatHist)
-			updatHist[i++] = [`20${uh.slice (0, 2)}`, uh.slice (2, 4) - 1, uh.slice (4, 6), uh.slice (7, 9), uh.slice (9, 11), uh.slice (11, 13), MONTH[uh.slice (2, 4) - 1]];
-		for (let i = 0; i < updatHist.length; i++) $(`#updateHist`).html ($(`#updateHist`).html() + tFmt (`%d %D %N %Y`, updatHist[i]) + (i % 2 ? ` , ` : ` to `));
+		for (let uh of updatHist) updatHist[i++] = [`20${uh.slice (0, 2)}`, uh.slice (2, 4) - 1, uh.slice (4, 6), uh.slice (7, 9), uh.slice (9, 11), uh.slice (11, 13), MONTH[uh.slice (2, 4) - 1]];
+		for (let i = 0; i < updatHist.length; i+=2) hist.push (`${tFmt (`%d %D %N %Y %h:%m`, updatHist[i])} to ${tFmt (`%d %D %N %Y %h:%m`, updatHist[i + 1])}`);
+		$(`#updateHist`).html (hist.join (` , `));
 	}
 	function tDf (t1, t2) {
 		if (t2 - t1 < 0) t2 = new Date();
