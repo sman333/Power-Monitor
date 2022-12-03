@@ -144,7 +144,10 @@
 	<a href="https://www.w3schools.com/w3css/default.asp" title="W3.CSS" target="_blank" class="w3-hover-opacity"> w3.css </a>
 </small> </center> </footer>
 <script defer>
-	const P_D = $(`#printDiv`);
+	const P_Di = $(`#printDiv`);
+	const P_D = P_Di[0];
+	const PM_DD = $(`#powMonDataDiv`)[0];
+	const D_S = $(`#downloadDataStatus`)[0];
 	const DAY = [`Sun`, `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`];
 	const MONTH = [`Jan`, `Feb`, `Mar`, `Apr`, `May`, `Jun`, `Jul`, `Aug`, `Sep`, `Oct`, `Nov`, `Dec`];
 	const NOW = new Date();
@@ -204,8 +207,8 @@
 			calHtm += `</div>
 				</div>`;
 		}
-		$(`#downloadMonths`).html (calHtm);
-		$(`#showData`).html (shDatHtm);
+		$(`#downloadMonths`)[0].innerHTML = calHtm;
+		$(`#showData`)[0].innerHTML = shDatHtm;
 	}
 	function createImgs() {
 		for (let i = ShowSI; i < ShowEI; i++)
@@ -249,10 +252,10 @@
 		let csv = [], fr = sd = $(`#repFr`).val(), to = ed = $(`#repTo`).val();
 		if (sd == `` || ed == ``) return;
 		if (ed < sd) {
-			$(`#downloadDataStatus`).html (`<p class="w3-pale-red"> From Date must be before To Date. </p>`);
+			D_S.innerHTML = `<p class="w3-pale-red"> From Date must be before To Date. </p>`;
 			return;
 		}
-		$(`#downloadDataStatus`).html (``);
+		D_S.innerHTML = ``;
 		sd = sd.split (`-`);
 		ed = ed.split (`-`);
 		for (let i = 0; i < 3; i++) {
@@ -267,13 +270,13 @@
 					if (sd[D] <= parseInt (powMonData[i][D]) && parseInt (powMonData[i][D]) <= ed[D]) csv.push (powMonData[i]);
 		id = `${fr}_to_${to}`;
 		if (csv.length) downloadCsv (csv, id.replace (/-/g, `_`));
-		else $(`#downloadDataStatus`).html (`<p class="w3-pale-red"> No data present for period ${id.replace (/_/g, ` `)}. </p>`);
+		else D_S.innerHTML = `<p class="w3-pale-red"> No data present for period ${id.replace (/_/g, ` `)}. </p>`;
 	}
 	function getTables (op) {
 		let repFr = sd = $(`#repFr`).val(), repTo = nd = $(`#repTo`).val();
 		if (sd == `` || nd == ``) return;
 		if (nd < sd) {
-			$(`#downloadDataStatus`).html (`<p class="w3-pale-red"> From Date must be before To Date. </p>`);
+			D_S.innerHTML = `<p class="w3-pale-red"> From Date must be before To Date. </p>`;
 			return;
 		}
 		let divEmpty = true;
@@ -284,40 +287,40 @@
 			let cD = new Date (sd[Y], sd[M] - 1, parseInt (sd[D]) + d);
 			let id = `${DAY[cD.getDay()]}_${zeroPad (cD.getDate(), 2)}_${MONTH[cD.getMonth()]}_${cD.getFullYear()}`;
 			if (StrDates.indexOf (id.replace (/_/g, ` `)) != -1) {
-				P_D.html (P_D.html() + $(`#printDiv${id}`).html());
+				P_D.innerHTML = P_D.innerHTML + $(`#printDiv${id}`)[0].innerHTML;
 				divEmpty = false;
 			}
 		}
 		id = (`${repFr}_to_${repTo}`).replace (/-/g, `_`);
-		P_D.html (`<div id="printDiv${id}"> ${P_D.html()} </div> <img class="w3-image" id="datImg${id}" />`);
-		if (divEmpty) $(`#downloadDataStatus`).html (`<p class="w3-pale-red"> No data present for period ${id.replace (/_/g, ` `)}. </p>`);
+		P_D.innerHTML = `<div id="printDiv${id}"> ${P_D.innerHTML} </div> <img class="w3-image" id="datImg${id}" />`;
+		if (divEmpty) D_S.innerHTML = `<p class="w3-pale-red"> No data present for period ${id.replace (/_/g, ` `)}. </p>`;
 		else opTables (op, id);
 	}
 	async function getTbls (y, m) {
 		let sumIntrCnt = 0, sumDwnDur = 0;
-		P_D.html (``);
+		P_D.innerHTML = ``;
 		if (y) {
 			if (m) {
 				for (let i = 0; i < RawDates.length; i++)
 					if (y == RawDates[i][Y] && m == RawDates[i][M]) {
-						P_D.html (`${P_D.html()} ${$(`#printDiv${StrDates[i].replace (/\s/g, `_`)}`).html()}`);
+						P_D.innerHTML = `${P_D.innerHTML} ${$(`#printDiv${StrDates[i].replace (/\s/g, `_`)}`)[0].innerHTML}`;
 						sumIntrCnt += Tms[i].length / 2;
 						sumDwnDur += RawTotDwnDur[i];
 					}
 			}else {
 				for (let i = 0; i < RawDates.length; i++)
 					if (y == RawDates[i][Y]) {
-						P_D.html (`${P_D.html()} ${$(`#printDiv${StrDates[i].replace (/\s/g, `_`)}`).html()}`);
+						P_D.innerHTML = `${P_D.innerHTML} ${$(`#printDiv${StrDates[i].replace (/\s/g, `_`)}`)[0].innerHTML}`;
 						sumIntrCnt += Tms[i].length /  2;
 						sumDwnDur += RawTotDwnDur[i];
 					}
 			}
 			let sumHtm = `<b> <p> <i> Total Interruptions: </i> ${sumIntrCnt} <br> <i> Total Down Duration: </i> ${tFmt (`%hh %mm %ss`, secToHMS (sumDwnDur), true)} </p> </b>`;
-			P_D.html (`${sumHtm + P_D.html()} <br> ${sumHtm} <br>`);
+			P_D.innerHTML = `${sumHtm + P_D.innerHTML} <br> ${sumHtm} <br>`;
 
-		}else $(`.datTbl`).each (function() { P_D.html (P_D.html() + $(this).html()); });
+		}else $(`.datTbl`).each (function() { P_D.innerHTML = P_D.innerHTML + $(this)[0].innerHTML; });
 		let id = (m ? `${MONTH[m]}_` : ``) + (y ? y : `AllData`);
-		P_D.html (`<div id="printDiv${id}"> ${P_D.html()} </div> <img class="w3-image" id="datImg${id}" />`);
+		P_D.innerHTML = `<div id="printDiv${id}"> ${P_D.innerHTML} </div> <img class="w3-image" id="datImg${id}" />`;
 		return id;
 	}
 	function htmlToImg (id = ``) {
@@ -341,7 +344,7 @@
 				printDiv (id);
 				break;
 			case `sh` :
-				P_D.show();
+				P_Di.show();
 				html2canvas ($(`#printDiv${id}`)[0])
 					.then (canvas => {
 						canvas.toBlob (blob => {
@@ -366,7 +369,7 @@
 			case `sh` :
 				getTbls (y, m)
 					.then ((id) => {
-						P_D.show();
+						P_Di.show();
 						html2canvas ($(`#printDiv${id}`)[0])
 							.then (canvas => {
 								canvas.toBlob (blob => {
@@ -385,7 +388,7 @@
 		}
 	}
 	function postFormData (url, formData = new FormData()) {
-		let S_B = $(`#statusBar`);
+		let S_B = $(`#statusBar`)[0];
 		$.ajax({
 			type: `POST`,
 			url: url,
@@ -395,15 +398,15 @@
 			contentType: false,
 			cache: false,
 			processData: false,
-			beforeSend: () => S_B.html (`<svg class="w3-spin" viewBox="0 0 1792 1792" style="height:25px; margin:15px 0 0 0; padding:0; width:25px;"> <path d="M1152 896q0-106-75-181t-181-75-181 75-75 181 75 181 181 75 181-75 75-181zm512-109v222q0 12-8 23t-20 13l-185 28q-19 54-39 91 35 50 107 138 10 12 10 25t-9 23q-27 37-99 108t-94 71q-12 0-26-9l-138-108q-44 23-91 38-16 136-29 186-7 28-36 28h-222q-14 0-24.5-8.5t-11.5-21.5l-28-184q-49-16-90-37l-141 107q-10 9-25 9-14 0-25-11-126-114-165-168-7-10-7-23 0-12 8-23 15-21 51-66.5t54-70.5q-27-50-41-99l-183-27q-13-2-21-12.5t-8-23.5v-222q0-12 8-23t19-13l186-28q14-46 39-92-40-57-107-138-10-12-10-24 0-10 9-23 26-36 98.5-107.5t94.5-71.5q13 0 26 10l138 107q44-23 91-38 16-136 29-186 7-28 36-28h222q14 0 24.5 8.5t11.5 21.5l28 184q49 16 90 37l142-107q9-9 24-9 13 0 25 10 129 119 165 170 7 8 7 22 0 12-8 23-15 21-51 66.5t-54 70.5q26 50 41 98l183 28q13 2 21 12.5t8 23.5z" fill="currentColor" /> </svg>`),
-			success: responseText => S_B.html (responseText),
-			error: () => S_B.html (`<p class="w3-yellow"> Server error, please try again. </p>`),
+			beforeSend: () => S_B.innerHTML = `<svg class="w3-spin" viewBox="0 0 1792 1792" style="height:25px; margin:15px 0 0 0; padding:0; width:25px;"> <path d="M1152 896q0-106-75-181t-181-75-181 75-75 181 75 181 181 75 181-75 75-181zm512-109v222q0 12-8 23t-20 13l-185 28q-19 54-39 91 35 50 107 138 10 12 10 25t-9 23q-27 37-99 108t-94 71q-12 0-26-9l-138-108q-44 23-91 38-16 136-29 186-7 28-36 28h-222q-14 0-24.5-8.5t-11.5-21.5l-28-184q-49-16-90-37l-141 107q-10 9-25 9-14 0-25-11-126-114-165-168-7-10-7-23 0-12 8-23 15-21 51-66.5t54-70.5q-27-50-41-99l-183-27q-13-2-21-12.5t-8-23.5v-222q0-12 8-23t19-13l186-28q14-46 39-92-40-57-107-138-10-12-10-24 0-10 9-23 26-36 98.5-107.5t94.5-71.5q13 0 26 10l138 107q44-23 91-38 16-136 29-186 7-28 36-28h222q14 0 24.5 8.5t11.5 21.5l28 184q49 16 90 37l142-107q9-9 24-9 13 0 25 10 129 119 165 170 7 8 7 22 0 12-8 23-15 21-51 66.5t-54 70.5q26 50 41 98l183 28q13 2 21 12.5t8 23.5z" fill="currentColor" /> </svg>`,
+			success: responseText => S_B.innerHTML = responseText,
+			error: () => S_B.innerHTML = `<p class="w3-yellow"> Server error, please try again. </p>`,
 		});
-		setTimeout (() => S_B.html (``), 3000);
+		setTimeout (() => S_B.innerHTML = ``, 3000);
 	}
 	function printDiv (id = ``) {
 		newWin = window.open();
-		newWin.document.write (`<style>` + (((id.match (/_/g))??[0]).length == 1 ? `body { columns: 300px 3; }`:``) + $(`#printDivStyle`).html() + `</style>` + $(`#printDiv${id}`).html());
+		newWin.document.write (`<style>` + (((id.match (/_/g))??[0]).length == 1 ? `body { columns: 300px 3; }`:``) + $(`#printDivStyle`)[0].innerHTML + `</style>` + $(`#printDiv${id}`)[0].innerHTML);
 		newWin.document.title = `${id} PowerMonitor`;
 		newWin.print();
 	}
@@ -439,7 +442,7 @@
 	}
 	function showPowerMonitorData() {
 		if (powMonData == `` || powMonData == ` `) {
-			$(`#dataStatus`).text (`No Data Available`);
+			$(`#dataStatus`)[0].innerText = `No Data Available`;
 			return;
 		}
 		powMonData = powMonData.split (`,`);
@@ -454,7 +457,7 @@
 			i++;
 		}
 		powMonData.length = i;
-		$(`#dataStatus`).text (``);
+		$(`#dataStatus`)[0].innerText = ``;
 		RawDates.push (powMonData[0]);
 		StrDates.push (tFmt (`%d %D %N %Y`, powMonData[0]));
 		RawTotDwnDur.push (0);
@@ -503,7 +506,7 @@
 			if (RawDates[i][Y] == ShowYear && RawDates[i][M] == ShowMonth && !ShowSI) ShowSI = i;
 			if (RawDates[i][Y] == ShowYear && RawDates[i][M] == ShowMonth) ShowEI = i + 1;
 		}
-		$(`#powMonDataDiv`).html (``);
+		PM_DD.innerHTML = ``;
 		let sn = 1;
 		for (i = 0, j = 0, p = 1; i < StrDates.length; i++, sn = 1) {
 			let datHtm = `<div class="w3-row-padding datRow" id="dataRow${StrDates[i].replace (/\s/g, `_`)}" ${((i < ShowSI || ShowEI < i) ? `style="display:none;"` : ``)}>
@@ -539,26 +542,26 @@
 						${btn (`sh`, i).replace (`%STY%`, `display:none;`)}
 					</div>
 				</div>`;
-			$(`#powMonDataDiv`).html ($(`#powMonDataDiv`).html() + datHtm);
+			PM_DD.innerHTML = PM_DD.innerHTML + datHtm;
 		}
 		let x = StrDates.indexOf (`${DAY[NOW.getDay()]} ${NOW.getDate()} ${MONTH[NOW.getMonth()]} ${NOW.getFullYear()}`);
 		if (x != -1) {
 			offDurToday = TotDownDur[x];
 			interCount = parseInt (Tms[x].length / 2);
 		}
-		$(`#offDurToday`).html (offDurToday);
-		$(`#interCount`).html (interCount);
+		$(`#offDurToday`)[0].innerHTML = offDurToday;
+		$(`#interCount`)[0].innerHTML = interCount;
 		showUpdateHist();
 		$(`#repFr`)[0].min = $(`#repTo`)[0].min = `${RawDates[0][Y]}-${zeroPad (RawDates[0][M] + 1, 2)}-${zeroPad (RawDates[0][D], 2)}`;
 		$(`#repFr`)[0].max = $(`#repTo`)[0].max = `${RawDates[RawDates.length - 1][Y]}-${zeroPad (RawDates[RawDates.length - 1][M] + 1, 2)}-${zeroPad (RawDates[RawDates.length - 1][D], 2)}`;
 	}
 	function showUpdateHist() {
 		let hist = [], updatHist = UPDATE_HIST.split (`,`);
-		$(`#updateHist`).html (`Update / Maintenance Break History : `);
+		$(`#updateHist`)[0].innerHTML = `Update / Maintenance Break History : `;
 		let i = 0;
 		for (let uh of updatHist) updatHist[i++] = [`20${uh.slice (0, 2)}`, uh.slice (2, 4) - 1, uh.slice (4, 6), uh.slice (7, 9), uh.slice (9, 11), uh.slice (11, 13), MONTH[uh.slice (2, 4) - 1]];
 		for (let i = 0; i < updatHist.length; i+=2) hist.push (`${tFmt (`%d %D %N %Y %h:%m`, updatHist[i])} to ${tFmt (`%d %D %N %Y %h:%m`, updatHist[i + 1])}`);
-		$(`#updateHist`).html (hist.join (` , `));
+		$(`#updateHist`)[0].innerHTML = hist.join (` , `);
 	}
 	function tDf (t1, t2) {
 		if (t2 - t1 < 0) t2 = new Date();
@@ -599,7 +602,7 @@
 	function share (blob, name) { navigator.share ({ files: [new File ([blob], `${name} PowerMonitor.png`, { type: blob.type, lastModified: new Date().getTime() })] }); }
 	function shareTbl (n) { share (TableBlob[n], StrDates[n].replace (/\s/g, `_`)); }
 
-	addClassNameListener (`details`, $(`#powMonDataDiv`)[0].scrollIntoView (false));
+	addClassNameListener (`details`, PM_DD.scrollIntoView (false));
 	docReady();
 	showPowerMonitorData();
 	createCalendar();
