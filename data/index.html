@@ -14,7 +14,12 @@
 		width: 20px;
 	}
 	table { text-align: center; }
-	.w3-btn { white-space: normal; }
+	.beat { animation: beat 500ms infinite alternate; }
+	@keyframes beat {
+		from { transform: scale(1.1, 1.1); }
+		to { transform: scale(1, 1); }
+	}
+	.datTbl { display: inline-block; }
 	.mainContent {
 		margin: auto;
 		max-width: 700px;
@@ -28,7 +33,7 @@
 		text-align: center;
 		z-index: 10;
 	}
-	.datTbl { display: inline-block; }
+	.w3-btn { white-space: normal; }
 </style>
 <style id="printDivStyle">
 	table {
@@ -57,11 +62,21 @@
 			<path d="M1639 1056q0 5-1 7-64 268-268 434.5t-478 166.5q-146 0-282.5-55t-243.5-157l-129 129q-19 19-45 19t-45-19-19-45v-448q0-26 19-45t45-19h448q26 0 45 19t19 45-19 45l-137 137q71 66 161 102t187 36q134 0 250-65t186-179q11-17 53-117 8-23 30-23h192q13 0 22.5 9.5t9.5 22.5zm25-800v448q0 26-19 45t-45 19h-448q-26 0-45-19t-19-45 19-45l138-138q-148-137-349-137-134 0-250 65t-186 179q-11 17-53 117-8 23-30 23h-199q-13 0-22.5-9.5t-9.5-22.5v-7q65-268 270-434.5t480-166.5q146 0 284 55.5t245 156.5l130-129q19-19 45-19t45 19 19 45z" fill="currentColor" />
 		</svg>
 	</b>
+	<b class="w3-bar-item w3-button w3-right w3-hover-black" onclick=theme(0) title="Dark Theme" id="darkTheme">
+		<svg viewBox="0 0 1792 1792">
+			<path d="M896 1440v-1088q-148 0-273 73t-198 198-73 273 73 273 198 198 273 73zm768-544q0 209-103 385.5t-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103 385.5 103 279.5 279.5 103 385.5z" fill="currentColor" />
+		</svg>
+	</b>
+	<b class="w3-bar-item w3-button w3-right w3-hover-white" onclick=theme(1) title="Light Theme" id="lightTheme" style="display:none;">
+		<svg viewBox="0 0 1792 1792">
+			<path d="M896 1440v-1088q-148 0-273 73t-198 198-73 273 73 273 198 198 273 73zm768-544q0 209-103 385.5t-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103 385.5 103 279.5 279.5 103 385.5z" fill="currentColor" />
+		</svg>
+	</b>
 </header>
 <div id="statusBar" class="statusBar w3-top"  style="margin-top:30px;"> </div>
-<div class="w3-light-gray" style="height:50px;"> </div>
-<div class="w3-light-gray w3-padding-32" style="min-height:90vh;">
-	<div class="mainContent w3-card w3-white w3-margin-bottom">
+<div style="height:50px;"> </div>
+<div class="w3-padding-32" style="min-height:90vh;">
+	<div class="mainContent w3-card w3-margin-bottom">
 		<div class="w3-bar">
 			<span class="w3-bar-item w3-button w3-hover-white navTabs homeNavLnk" style="width:50%;" onclick=showPage(`home`)>
 				<svg viewBox="0 0 1792 1792">
@@ -74,14 +89,17 @@
 				</svg> Details
 			</span>
 		</div>
-		<div id="home" class="pgs w3-padding"><br>
+		<div id="home" class="pgs w3-padding"> <br/>
+			<noscript> <h5 class="w3-padding w3-center w3-text-red w3-yellow beat"> <b> <i> This browser does not support script or script has been disabled. </i> <br/> Please enable script or use another browser. </b> </h5> </noscript>
+			<b> <i> <small class="w3-right" id="clock"> </small> </i> </b>
+			<script> setInterval (() => {document.getElementById(`clock`).innerHTML = tFmt (`%d %D %N %Y <br/> %h:%m:%s`)}, 1000); </script>
 			<p> Total Down Duration Today: <b> <span id="offDurToday"> </span> </b> </p>
 			<p> Interruption Count: <b> <span id="interCount"> </span> </b> </p>
 <!-- <div id="pieChart"> <center> <h5> Pie Chart </h5> </center> </div> -->
-			<a class="w3-btn w3-black w3-block mx-auto" onclick="$(`.detailsNavLnk`).click();">
+			<a class="w3-btn w3-deep-orange w3-block mx-auto" onclick="$(`.detailsNavLnk`).click();">
 				<svg viewBox="0 0 1792 1792">
 					<path d="M640 896v512h-256v-512h256zm384-512v1024h-256v-1024h256zm1024 1152v128h-2048v-1536h128v1408h1920zm-640-896v768h-256v-768h256zm384-384v1152h-256v-1152h256z" fill="currentColor" />
-				</svg> Details </a>
+				</svg> View Details </a>
 			<hr>
 			<div class="w3-center">
 				<h5 class="w3-padding-large"> Downloads </h5>
@@ -116,7 +134,7 @@
 			<div id="printDiv" style="display:none;"> </div>
 			<small> <p id="updateHist"> </p> </small>
 		</div>
-		<div id="details" class="pgs w3-padding" style="display: none;"> <br>
+		<div id="details" class="pgs w3-padding" style="display: none;"> <br/>
 			<b> <p class="w3-pale-yellow" id="dataStatus"> </p> </b>
 			<p> <i> To save as PDF go to <input type="text" id="gotoIp" value="http://192.168.4.1/" /> in your browser </i> 
 				<b class="w3-btn w3-purple w3-round-xxlarge"
@@ -130,18 +148,18 @@
 					<path d="M448 1536h896v-256h-896v256zm0-640h896v-384h-160q-40 0-68-28t-28-68v-160h-640v640zm1152 64q0-26-19-45t-45-19-45 19-19 45 19 45 45 19 45-19 19-45zm128 0v416q0 13-9.5 22.5t-22.5 9.5h-224v160q0 40-28 68t-68 28h-960q-40 0-68-28t-28-68v-160h-224q-13 0-22.5-9.5t-9.5-22.5v-416q0-79 56.5-135.5t135.5-56.5h64v-544q0-40 28-68t68-28h672q40 0 88 20t76 48l152 152q28 28 48 76t20 88v256h64q79 0 135.5 56.5t56.5 135.5z" fill="currentColor" />
 				</svg>
 			</b>
-			<div id="powMonDataDiv"> </div> <br>
-			<a class="w3-btn w3-black mx-auto" onclick="$(`.homeNavLnk`).click();">
+			<div id="powMonDataDiv"> </div> <br/>
+			<a class="w3-btn w3-deep-orange mx-auto" onclick="$(`.homeNavLnk`).click();">
 				<svg viewBox="0 0 1792 1792">
 					<path d="M1472 992v480q0 26-19 45t-45 19h-384v-384h-256v384h-384q-26 0-45-19t-19-45v-480q0-1 .5-3t.5-3l575-474 575 474q1 2 1 6zm223-69l-62 74q-8 9-21 11h-3q-13 0-21-7l-692-577-692 577q-12 8-24 7-13-2-21-11l-62-74q-8-10-7-23.5t11-21.5l719-599q32-26 76-26t76 26l244 204v-195q0-14 9-23t23-9h192q14 0 23 9t9 23v408l219 182q10 8 11 21.5t-7 23.5z" fill="currentColor" />
-				</svg> Home </a>
+				</svg> Back to Home </a>
 		</div>
 	</div>
 </div>
 <footer class="w3-black w3-padding-small w3-bottom"> <center> <small>
 	Power Failure Logging &amp; Monitoring System | 
 	<a href="https://github.com/sman333/Power-Monitor" title="github" target="_blank" class="w3-hover-opacity"> Github </a> | Powered By
-	<a href="https://www.w3schools.com/w3css/default.asp" title="W3.CSS" target="_blank" class="w3-hover-opacity"> w3.css </a>
+	<a href="https://w3schools.com/w3css/default.asp" title="W3.CSS" target="_blank" class="w3-hover-opacity"> w3.css </a>
 </small> </center> </footer>
 <script defer>
 	const P_Di = $(`#printDiv`);
@@ -157,11 +175,10 @@
 	const BTN_HTML = `<b class="w3-btn w3-small w3-round w3-border w3-border-%COLOR% w3-text-%COLOR% w3-hover-%COLOR% w3-margin-top" onclick=%ONCLK%> %LABEL% </b>`;
 	const PRINT_BTN_HTML = BTN_HTML.replace (/%COLOR%/g, `blue`).replace (`%LABEL%`, `print this table`).replace (`%ONCLK%`, `printDiv("%ID%")`);
 	const SHARE_BTN_HTML = BTN_HTML.replace (/%COLOR%/g, `red`).replace (`%LABEL%`, `share this table`).replace (`%ONCLK%`, `shareTbl(%ID%) id=shImgBtn%ID% style=%STY%`);
+	const zeroPad = x => parseInt (x) < 10 ? `0${x}` : x
+	let THEME = !window.matchMedia (`(prefers-color-scheme: dark)`).matches;
 	let RawDates = [], StrDates = [], RawTotDwnDur = [], TotDownDur = [], Tms = [], DownDur = [], TableBlob = [];
-	let ShowMonth = NOW.getMonth(), ShowYear = NOW.getFullYear(), ShowSI = 0, ShowEI = 0;
-
-	const zeroPad = (num, places) => String (num).padStart (places, `0`)
-
+	let ShowMonth = tFmt (`%M`), ShowYear = tFmt (`%Y`), ShowSI = 0, ShowEI = 0;
 	function addClassNameListener (eleId, callback) {
 		let ele = $(`#${eleId}`);
 		let lastClassName = ele.className;
@@ -200,8 +217,8 @@
 								<b class="w3-bar-item w3-btn w3-hover-green w3-text-green" onclick=getCsv(${y},${m})> excel / csv </b>
 							</div>
 						</div>`;
-					shDatHtm += `<option value="${y}_${m}" ${((m == NOW.getMonth() && y == NOW.getFullYear()) ? `selected` : ``)}> ${MONTH[m]} ${y} </option>`;
-				}else calHtm += `<p class="w3-light-gray w3-text-gray w3-round-xxlarge w3-padding-small"> ${MONTH[m]} </p>`;
+					shDatHtm += `<option value="${y}_${m}" ${((m == parseInt (tFmt (`%M`)) && y == tFmt (`%Y`)) ? `selected` : ``)}> ${MONTH[m]} ${y} </option>`;
+				}else calHtm += `<p class="w3-gray w3-opacity w3-round-xxlarge w3-padding-small"> ${MONTH[m]} </p>`;
 				calHtm += `</div>`;
 			}
 			calHtm += `</div>
@@ -222,16 +239,16 @@
 	}
 	function docReady() {
 		let timeNow = new FormData();
-		timeNow.append (`Y`, NOW.getFullYear());
-		timeNow.append (`M`, NOW.getMonth() + 1);
-		timeNow.append (`D`, NOW.getDate());
-		timeNow.append (`h`, NOW.getHours());
-		timeNow.append (`m`, NOW.getMinutes());
-		timeNow.append (`s`, NOW.getSeconds());
+		timeNow.append (`Y`, tFmt (`%Y`));
+		timeNow.append (`M`, tFmt (`%M`));
+		timeNow.append (`D`, tFmt (`%D`));
+		timeNow.append (`h`, tFmt (`%h`));
+		timeNow.append (`m`, tFmt (`%m`));
+		timeNow.append (`s`, tFmt (`%s`));
 		postFormData (`/documentReady`, timeNow);
 		$(`#power_data`).remove();
 		let script = document.createElement (`script`);
-		script.src = `power_data.js?${new Date().getTime()}`;
+		script.src = `power_data.js?${tFmt()}`;
 		script.id = `power_data`;
 		document.head.append (script);
 	}
@@ -284,8 +301,7 @@
 		nd = (tDf (new Date (sd), new Date (nd))[S] / (24 * 3600)) + 1;
 		sd = sd.split (`-`);
 		for (let d = 0; d < nd; d++) {
-			let cD = new Date (sd[Y], sd[M] - 1, parseInt (sd[D]) + d);
-			let id = `${DAY[cD.getDay()]}_${zeroPad (cD.getDate(), 2)}_${MONTH[cD.getMonth()]}_${cD.getFullYear()}`;
+			let id = tFmt (`%d_%D_%N_%Y`, new Date (sd[Y], sd[M] - 1, parseInt (sd[D]) + d));
 			if (StrDates.indexOf (id.replace (/_/g, ` `)) != -1) {
 				P_D.innerHTML = P_D.innerHTML + $(`#printDiv${id}`)[0].innerHTML;
 				divEmpty = false;
@@ -315,8 +331,8 @@
 						sumDwnDur += RawTotDwnDur[i];
 					}
 			}
-			let sumHtm = `<b> <p> <i> Total Interruptions: </i> ${sumIntrCnt} <br> <i> Total Down Duration: </i> ${tFmt (`%hh %mm %ss`, secToHMS (sumDwnDur), true)} </p> </b>`;
-			P_D.innerHTML = `${sumHtm + P_D.innerHTML} <br> ${sumHtm} <br>`;
+			let sumHtm = `<b> <p> <i> Total Interruptions: </i> ${sumIntrCnt} <br/> <i> Total Down Duration: </i> ${tFmt (`%hh %mm %ss`, secToHMS (sumDwnDur), true)} </p> </b>`;
+			P_D.innerHTML = `${sumHtm + P_D.innerHTML} <br/> ${sumHtm} <br/>`;
 
 		}else $(`.datTbl`).each (function() { P_D.innerHTML = P_D.innerHTML + $(this)[0].innerHTML; });
 		let id = (m ? `${MONTH[m]}_` : ``) + (y ? y : `AllData`);
@@ -368,7 +384,7 @@
 				break;
 			case `sh` :
 				getTbls (y, m)
-					.then ((id) => {
+					.then (id => {
 						P_Di.show();
 						html2canvas ($(`#printDiv${id}`)[0])
 							.then (canvas => {
@@ -418,6 +434,8 @@
 		hms[s] = parseInt (s % 60);
 		return hms;
 	}
+	function share (blob, name) { navigator.share ({ files: [new File ([blob], `${name} PowerMonitor.png`, { type: blob.type, lastModified: tFmt() })] }); }
+	function shareTbl (n) { share (TableBlob[n], StrDates[n].replace (/\s/g, `_`)); }
 	function showData() {
 		ShowSI = ShowEI = 0;
 		let sel = $(`#showData`).val();
@@ -450,7 +468,7 @@
 		let i = 0, j, k, dif, offDur = 0, offDurToday = 0, interCount = 0;
 		let prevState = `OF`;
 		for (let dt of powMonData) {
-			if (dt.slice (0, 2) == `00`) continue;	// skip all years where clock resets to 0000, clock battery failed
+			if (dt.slice (0, 2) == `00`) continue;		// skip all years where clock resets to 0000, clock battery failed
 			if (prevState == dt.slice (13)) continue;	// skip if adjacent values are of same state
 			prevState = dt.slice (13);
 			powMonData[i] = [parseInt (`20${dt.slice (0, 2)}`), dt.slice (2, 4) - 1, dt.slice (4, 6), dt.slice (7, 9), dt.slice (9, 11), dt.slice (11, 13), MONTH[parseInt (dt.slice (2, 4)) - 1]];
@@ -544,7 +562,7 @@
 				</div>`;
 			PM_DD.innerHTML = PM_DD.innerHTML + datHtm;
 		}
-		let x = StrDates.indexOf (`${DAY[NOW.getDay()]} ${NOW.getDate()} ${MONTH[NOW.getMonth()]} ${NOW.getFullYear()}`);
+		let x = StrDates.indexOf (tFmt (`%d %D %N %Y`));
 		if (x != -1) {
 			offDurToday = TotDownDur[x];
 			interCount = parseInt (Tms[x].length / 2);
@@ -552,8 +570,8 @@
 		$(`#offDurToday`)[0].innerHTML = offDurToday;
 		$(`#interCount`)[0].innerHTML = interCount;
 		showUpdateHist();
-		$(`#repFr`)[0].min = $(`#repTo`)[0].min = `${RawDates[0][Y]}-${zeroPad (RawDates[0][M] + 1, 2)}-${zeroPad (RawDates[0][D], 2)}`;
-		$(`#repFr`)[0].max = $(`#repTo`)[0].max = `${RawDates[RawDates.length - 1][Y]}-${zeroPad (RawDates[RawDates.length - 1][M] + 1, 2)}-${zeroPad (RawDates[RawDates.length - 1][D], 2)}`;
+		$(`#repFr`)[0].min = $(`#repTo`)[0].min = `${RawDates[0][Y]}-${zeroPad (RawDates[0][M] + 1)}-${zeroPad (RawDates[0][D])}`;
+		$(`#repFr`)[0].max = $(`#repTo`)[0].max = `${RawDates[RawDates.length - 1][Y]}-${zeroPad (RawDates[RawDates.length - 1][M] + 1)}-${zeroPad (RawDates[RawDates.length - 1][D])}`;
 	}
 	function showUpdateHist() {
 		let hist = [], updatHist = UPDATE_HIST.split (`,`);
@@ -564,7 +582,7 @@
 		$(`#updateHist`)[0].innerHTML = hist.join (` , `);
 	}
 	function tDf (t1, t2) {
-		if (t2 - t1 < 0) t2 = new Date();
+		if (t2 < t1) t2 = new Date();
 		let ds = (t2 - t1) / 1000, dif = [0, 0, 0, 0, 0, 0, 0];
 		dif[S] = ds;
 		dif[h] = parseInt (ds / 3600);
@@ -573,35 +591,42 @@
 		dif[s] = parseInt (ds % 60);
 		return dif;
 	}
-	function tFmt (format, t = new Date(), interval = false) {
+	function tFmt (format = false, t = new Date(), interval = false) {
+		if (!format) return t.getTime();
 		if (t == -1) return `-`;
-		if (interval) {
-			if (t[h] == 0) {
-				format = format.replace (`%h`, ``);
-				format = format.replace (`h`, ``);
-			}
-			if (t[m] == 0) {
-				format = format.replace (`%m`, ``);
-				format = format.replace (`m`, ``);
-			}
-			if (t[s] == 0) {
-				format = format.replace (`%s`, ``);
-				format = format.replace (`s`, ``);
-			}
+		if (interval && t.length != undefined) {
+			if (t[h] == 0) format = format.replace (`%h`, ``).replace (`h`, ``);
+			if (t[m] == 0) format = format.replace (`%m`, ``).replace (`m`, ``);
+			if (t[s] == 0) format = format.replace (`%s`, ``).replace (`s`, ``);
 		}
-		format = format.replace (`%Y`, t[Y]);			//	year YYYY
-		format = format.replace (`%M`, t[M]);			//	month MM
-		format = format.replace (`%D`, t[D]);			//	day DD
-		format = format.replace (`%h`, t[h]);			//	hours hh
-		format = format.replace (`%m`, t[m]);			//	minutes mm
-		format = format.replace (`%s`, t[s]);			//	seconds ss
-		format = format.replace (`%N`, t[N]);			//	month MMM
-		format = format.replace (`%d`, DAY[new Date (t[Y], t[M], t[D]).getDay()]);			//	day ddd
+		format = format.replace (`%Y`, t.length != undefined ? t[Y] : t.getFullYear());					//	year YYYY
+		format = format.replace (`%M`, t.length != undefined ? t[M] : zeroPad (t.getMonth() + 1));		//	month MM
+		format = format.replace (`%D`, t.length != undefined ? t[D] : zeroPad (t.getDate()));			//	day DD
+		format = format.replace (`%h`, t.length != undefined ? t[h] : zeroPad (t.getHours()));			//	hours hh
+		format = format.replace (`%m`, t.length != undefined ? t[m] : zeroPad (t.getMinutes()));		//	minutes mm
+		format = format.replace (`%s`, t.length != undefined ? t[s] : zeroPad (t.getSeconds()));		//	seconds ss
+		format = format.replace (`%N`, t.length != undefined ? t[N] : MONTH[t.getMonth()]);				//	month MMM
+		format = format.replace (`%d`, DAY[t.length != undefined ? new Date (t[Y], t[M], t[D]).getDay() : t.getDay()]);			//	day ddd
 		return format;
 	}
-	function share (blob, name) { navigator.share ({ files: [new File ([blob], `${name} PowerMonitor.png`, { type: blob.type, lastModified: new Date().getTime() })] }); }
-	function shareTbl (n) { share (TableBlob[n], StrDates[n].replace (/\s/g, `_`)); }
+	function theme (t) {
+		THEME = t;
+		$(`#${t ? `light` : `dark`}Theme`).hide();
+		// $(`.navTabs`).addClass (`w3-${t ? `light` : `dark`}-gray`);
+		t ? (
+    		$(`body`).removeClass (`w3-dark-gray`).addClass (`w3-light-gray`),
+    		$(`.mainContent`).removeClass (`w3-black`).addClass (`w3-white`)
+	    ) : (
+    		$(`body`).removeClass (`w3-light-gray`).addClass (`w3-dark-gray`),
+    		$(`.mainContent`).removeClass (`w3-white`).addClass (`w3-black`)
+        );
+		$(`.navTabs`).filter (`.w3-${t ? `dark` : `light`}-gray`).removeClass (`w3-${t ? `dark` : `light`}-gray`).addClass (`w3-${t ? `light` : `dark`}-gray`);
+		$(`.navTabs`).filter (`.w3-hover-${t ? `black` : `white`}`).removeClass (`w3-hover-${t ? `black` : `white`}`).addClass (`w3-hover-${t ? `white` : `black`}`);
+		$(`#${t ? `dark` : `light`}Theme`).show();
+	}
+	window.matchMedia (`(prefers-color-scheme: dark)`).onchange = () => theme (!window.matchMedia (`(prefers-color-scheme: dark)`).matches);
 
+	theme (THEME);
 	addClassNameListener (`details`, PM_DD.scrollIntoView (false));
 	docReady();
 	showPowerMonitorData();
@@ -612,8 +637,8 @@
 		createImgs();
 	});
 	$(`.navTabs`).click (function() {
-		$(`.navTabs`).addClass (`w3-light-gray`);
-		$(this).removeClass (`w3-light-gray`);
+		$(`.navTabs`).addClass (`w3-${THEME ? `light` : `dark`}-gray`);
+		$(this).removeClass (`w3-${THEME ? `light` : `dark`}-gray`);
 	});
 </script>
 </body>
