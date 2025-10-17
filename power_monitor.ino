@@ -1,223 +1,132 @@
-#include <DNSServer.h>
 #include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <LittleFS.h>
-//Send data as UNIXtimestamp to javascript as it is easier...
+#include <HTTPSRedirect.h>
 #include <string.h>
 #include "RTClib.h"
 
-RTC_DS1307 rtc;
-DateTime now;
-File f;
-bool savOn = false, savOf = false;
+IPAddress local_IP (192, 168, 1, 234);
+IPAddress gateway (192, 168, 1, 1);
+IPAddress subnet (255, 255, 255, 0);
+IPAddress primaryDNS (8, 8, 8, 8);
+IPAddress secondaryDNS (8, 8, 4, 4);
+const char* ssid1 = "BSNL_FTTH";
+const char* pass = "4712260337";
+
+HTTPSRedirect* client = nullptr;
+const char* GScriptId1 = "AKfycbwbrGKlZlxO0pqPcyIoBAYj-VQuHaTXBCBmVPp42-E783JDrpN--qYgmuuO8FNeWEtr";
+const char* host1 = "script.google.com";
+const int httpsPort = 443;
+String url = String ("/macros/s/") + GScriptId1 + "/exec";
+String reqArgs, resp;
 
 const int ipPow = A0;
 const int hibernateVolt = 510;
 const int wakeUpVolt = 515;
+bool savOn = false, savOf = true;
+RTC_DS1307 rtc;
+DateTime now;
+const int BUF_LEN = 50;
+String CIRC_BUFF[50], tmStr;
+int rd = 0, wrt = 0;
 
-/* wifi network ssid (name) & password */
-const char* ssid = "Power_Monitor";
-const char* password = "password";
-
-#define DATAFILE "/power_data.js"
-
-const char* dat_end_str = "'; if(typeof dataReady === 'function')dataReady();";
-int dat_end_str_len = 50;
-
-String powMonData, tmStr;
-
-DNSServer dnsServer;      /* DNS server -- for captive portal */
-AsyncWebServer server (80);   /* Web server */
-
-
-void hibernate (int volt) {
-	if (analogRead (ipPow) < volt) ESP.deepSleep (10e6);			/* 10 seconds - fn takes micro seconds argument, 10 x (10 ^ 6) , (e means 10 ^) */
+bool hibernate (int volt) {
+  if (analogRead (ipPow) < volt) {
+    ESP.deepSleep (10e6);      /* 10 seconds - fn takes micro seconds argument, 10 x (10 ^ 6) , (e means 10 ^) */
+    return true;
+  }
+  return false;
 }
 
 void setup() {
-
-	hibernate (wakeUpVolt);
-
-  Serial.begin(115200);
-
-  // Wire.begin(2,0);  //sda, scl
+  if (hibernate (wakeUpVolt)) return;
+  Serial.begin (115200);
   Wire.begin();
-
+  Serial.println ('\n');
   if (!rtc.begin()) {
-    Serial.println("Couldn't find RTC");
+    Serial.println ("Couldn't find RTC");
     Serial.flush();
     abort();
   }
-
-  if (!LittleFS.begin()) {
-    Serial.println ("An error has occurred while mounting LittleFS");
-    return;
-  }else
-    Serial.println ("LittleFS started");
-  Serial.print ("Configuring soft-AP ... ");
-  Serial.println (WiFi.softAP (ssid, password) ? "Ready" : "Failed!");          /* wifi soft access point */
-  delay (500);
-  Serial.print ("AP IP : ");
-  Serial.println (WiFi.softAPIP());
-
-  /* Setup the DNS server redirecting all the domains to the captive Portal IP */
-  dnsServer.setErrorReplyCode (DNSReplyCode::NoError);
-  dnsServer.start (53, "*", WiFi.softAPIP());
-
-  /* setup route for web pages */
-  server.on ("/", HTTP_GET, handleRoot);
-  server.on ("/generate_204", HTTP_GET, handleRoot);    /* Android captive portal. */
-  server.on ("/connecttest.txt", HTTP_GET, handleRoot);    /* Win 10 captive portal. */
-  server.on ("/hotspot-detect.html", HTTP_GET, handleRoot);    /* IOS (apple) captive portal. */
-  server.on ("/kindle-wifi/wifistub.html", HTTP_GET, handleRoot);    /* Kindle captive portal. */
-  server.onNotFound (handleRoot);
-
-  /* serve bootstrap resources */
-  server.on ("/bootstrap.min.css", HTTP_GET, serveBootstrapCss);
-  server.on ("/bootstrap.bundle.min.js", HTTP_GET, serveBootstrapJs);
-  server.on ("/jquery-3.5.1.min.js", HTTP_GET, serveJquery);
-  server.on ("/html2canvas.min.js", HTTP_GET, serveHtml2canvas);
-  server.on ("/power_data.js", HTTP_GET, servePower_data);
-
-  /* handle post request */
-  server.on ("/documentReady", HTTP_POST, handle_documentReady);
-
-  server.begin();    /* async web server start */
-  Serial.println ("HTTP server started");
-
-  dat_end_str_len = strlen (dat_end_str);
+  if (!WiFi.config (local_IP, gateway, subnet, primaryDNS, secondaryDNS)) Serial.println ("STA Failed to configure");
+  WiFi.begin (ssid1, pass);             
+  Serial.print ("Connecting to " + (String) ssid1);
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print (".");
+    delay (500);
+  }
+  Serial.println('\n');
+  Serial.print ("Connected @ IP: ");
+  Serial.println (WiFi.localIP());
   appendOnTime();
 }
 
+void appendOffTime() {
+  if (savOf || 700 < analogRead (ipPow)) return;
+  timeStr();
+  wrtBuf (tmStr + ",OFF");
+  savOf = true;
+  savOn = false;
+}
+void appendOnTime() {
+  if (savOn || analogRead (ipPow) < 700) return;
+  timeStr();
+  wrtBuf (tmStr + ",ON");
+  savOn = true;
+  savOf = false;
+}
+void delBuf() {
+  CIRC_BUFF[rd] = "";
+  rd++;
+  if (rd == wrt) {
+    rd = 0;
+    wrt = 0;
+  }
+  if (rd == BUF_LEN) rd = 0;
+}
 void fmt (int x) {
   if (x < 10) tmStr += "0";
   tmStr += x;
 }
-
+void sendData() {
+  if (!(rd || wrt)) return;
+  if (WiFi.status() != WL_CONNECTED) WiFi.begin (ssid1, pass);
+  Serial.println ("Connecting to... " + (String) host1);
+  client = new HTTPSRedirect (httpsPort);
+  client->setInsecure();
+  client->setPrintResponseBody (true);
+  client->setContentTypeHeader ("application/json");
+  if (!client->connected()) if (!client->connect (host1, httpsPort)) return;
+  Serial.println ("Connected");
+  reqArgs = "{\"values\":\"" + CIRC_BUFF[rd] + "\"}";
+  Serial.println ("Sending request..." + (String) reqArgs);
+  if (!client->POST (url, host1, reqArgs)) return;
+  resp = client->getResponseBody();
+  if (resp.substring (0, 7) == "Success") delBuf();
+  rtc.adjust (DateTime (resp.substring (resp.length() - 12).toInt()));
+  delete client;
+  client = nullptr;
+}
 void timeStr() { now = rtc.now();
-  tmStr = String (now.year() % 2000);
+  tmStr = String (now.year());
   fmt (now.month());
   fmt (now.day());
-  tmStr += " ";
+  tmStr += ",";
   fmt (now.hour());
   fmt (now.minute());
   fmt (now.second());
 }
-
-void displayContents() {
-  f = LittleFS.open (DATAFILE, "r");
-  if (!f) Serial.println ("Unable to open file");
-  else {
-    String s;
-    powMonData = "";
-    Serial.println ("Contents of file");
-    while (f.position() < f.size())
-    {
-      s = f.readStringUntil ('\n');
-      s.trim();
-      Serial.println (s);
-      powMonData += (String) s;
-    }
-    f.close();
-  }
-}
-
-void setTime (short Y, byte M, byte D, byte h, byte m, byte s) {
-  rtc.adjust (DateTime (Y, M, D, h, m, s));
-  Serial.println ("set RTC time");
-  Serial.println (Y);
-  Serial.println (M);
-  Serial.println (D);
-  Serial.println (h);
-  Serial.println (m);
-  Serial.println (s);
-}
-
-void serveBootstrapCss (AsyncWebServerRequest *request) {
-  request->send (LittleFS, "/bootstrap.min.css", "text/css");
-  Serial.println ("served bootstrap css");
-}
-void serveBootstrapJs (AsyncWebServerRequest *request) {
-  request->send (LittleFS, "/bootstrap.bundle.min.js", "application/javascript");
-  Serial.println ("served bootstrap bundle js");
-}
-void serveJquery (AsyncWebServerRequest *request) {
-  request->send (LittleFS, "/jquery-3.5.1.min.js", "application/javascript");
-  Serial.println ("served jquery-3.5.1");
-}
-void serveHtml2canvas (AsyncWebServerRequest *request) {
-  request->send (LittleFS, "/html2canvas.min.js", "application/javascript");
-  Serial.println ("served html2canvas js");
-}
-void servePower_data (AsyncWebServerRequest *request) {
-  request->send (LittleFS, "/power_data.js", "application/javascript");
-  Serial.println ("served power monitor log data js");
-}
-
-void handleRoot (AsyncWebServerRequest *request) {
-  request->send (LittleFS, "/index.html", "text/html");
-  Serial.println ("served index.html");
-}
-
-void handle_documentReady (AsyncWebServerRequest *request) {
-  setTime ((short) request->arg ("Y").toInt(),
-      (byte) request->arg ("M").toInt(),
-      (byte) request->arg ("D").toInt(),
-      (byte) request->arg ("h").toInt(),
-      (byte) request->arg ("m").toInt(),
-      (byte) request->arg ("s").toInt());
-  request->send (200, "text/html", (String) analogRead (ipPow) + "," + tmStr);
-  Serial.println ("document ready");
-}
-
-void appendOnTime() {
-  if (!savOn && (700 < analogRead (ipPow))) {
-    f = LittleFS.open (DATAFILE, "r+");
-    if (!f) Serial.println ("Unable to open file");
-    else {
-      f.seek (dat_end_str_len + 2, SeekEnd);
-	  if ('F' == (char)f.read()) {
-		timeStr();
-		f.seek (dat_end_str_len, SeekEnd);
-		f.print (tmStr + "ON," + dat_end_str);
-		f.close();
-		savOn = true;
-		savOf = false;
-		Serial.println ("saved on time " + tmStr);
-		displayContents();
-	  }
-    }
-  }
-}
-
-void appendOffTime() {
-  if (!savOf && (analogRead (ipPow) < 700)) {
-    f = LittleFS.open (DATAFILE, "r+");
-    if (!f) Serial.println ("Unable to open file");
-    else {
-      f.seek (dat_end_str_len + 2, SeekEnd);
-	  if ('N' == (char)f.read()) {
-		timeStr();
-		f.seek (dat_end_str_len, SeekEnd);
-		f.print (tmStr + "OF," + dat_end_str);
-		f.close();
-		savOf = true;
-		savOn = false;
-		Serial.println ("saved off time " + tmStr);
-		displayContents();
-	  }
-    }
-  }
+void wrtBuf (String x) {
+  CIRC_BUFF[wrt] = x;
+  wrt++;
+  if (wrt == BUF_LEN) wrt = 0;
 }
 
 void loop() {
   hibernate (hibernateVolt);
-  timeStr();
-  dnsServer.processNextRequest();     /* DNS Captive Portal */
   appendOffTime();
-  delay (100);
   appendOnTime();
+  yield();
+  sendData();
+  yield();
 }
 
 
